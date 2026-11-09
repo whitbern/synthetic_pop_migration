@@ -1,0 +1,9 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+build/
+dist/
+# Microdata (ACS PUMS, IPUMS International, UNHCR) must never be committed.
+data/
