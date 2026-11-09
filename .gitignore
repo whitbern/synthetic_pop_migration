@@ -1,0 +1,12 @@
+# Secrets
+API_Keys/
+.env
+
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Local data and caches
+cache/
+data/
