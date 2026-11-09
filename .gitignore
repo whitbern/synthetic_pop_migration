@@ -4,9 +4,15 @@ API_Keys/
 
 # Python
 __pycache__/
-*.pyc
+*.py[cod]
+*.egg-info/
+.pytest_cache/
 .ipynb_checkpoints/
+.venv/
+build/
+dist/
 
 # Local data and caches
+# Microdata (ACS PUMS, IPUMS International, UNHCR) must never be committed.
 cache/
 data/
