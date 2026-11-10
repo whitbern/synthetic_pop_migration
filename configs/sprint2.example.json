@@ -18,12 +18,12 @@
   },
   "targets": {
     "origin_shares": {
-      "_source": "SENAFRONT Jan-Sep 2022 (151,582 entries; Venezuelan 71%). Fill the rest from the same table.",
-      "Venezuela": 0.71,
-      "Haiti": null,
-      "Cuba": null,
-      "Ecuador": null,
-      "Cameroon": null
+      "_source": "Servicio Nacional de Migracion (Panama), Transito irregular por Darien, Cuadro No. 003, year 2022 (Dec 2022 release). Raw counts, Jan-Sep 2022 sum (total 151,582 entries; Venezuela 71.05%). Renormalised to the groups listed.",
+      "Venezuela": 107692,
+      "Haiti": 8613,
+      "Cuba": 4332,
+      "Ecuador": 6698,
+      "Cameroon": 923
     },
     "male_share": 0.715,
     "mean_age": 31.0,
