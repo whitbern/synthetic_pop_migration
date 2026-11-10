@@ -17,6 +17,7 @@ See ``configs/sprint2.example.json`` for every key.
 from __future__ import annotations
 
 import argparse
+import glob
 import json
 from pathlib import Path
 from typing import Mapping, Sequence
@@ -34,7 +35,7 @@ from synthpop.selection import (
 )
 from synthpop.truth import OriginGroup, Records, freeze_truth, load_frozen_truth, load_pums_persons
 
-__all__ = ["build", "feature", "freeze", "load_config", "targets_from_config"]
+__all__ = ["build", "expand_paths", "feature", "freeze", "load_config", "targets_from_config"]
 
 
 def load_config(path: str | Path) -> dict:
@@ -94,15 +95,50 @@ def feature(records: Records, name: str, origin_names: Sequence[str]) -> np.ndar
     raise ValueError(f"unknown tilt feature {name!r}")
 
 
+def expand_paths(entries: Sequence[str], what: str) -> list[str]:
+    """Expand glob patterns (e.g. ``data/raw/psam_pus*.csv``) and check every file exists.
+
+    Also warns when the folder holds files that look like further parts of
+    the same split file (``psam_pusa.csv`` listed, ``psam_pusc.csv`` present
+    but not listed), since leaving a part out silently drops whole states.
+    """
+    out: list[str] = []
+    for entry in entries:
+        if any(ch in entry for ch in "*?["):
+            matches = sorted(glob.glob(entry))
+            if not matches:
+                raise FileNotFoundError(f"{what}: pattern {entry!r} matches no files")
+            out.extend(matches)
+        else:
+            if not Path(entry).is_file():
+                raise FileNotFoundError(f"{what}: {entry!r} does not exist")
+            out.append(entry)
+    out = list(dict.fromkeys(out))
+    listed = {Path(p).resolve() for p in out}
+    for p in out:
+        stem = Path(p).stem
+        if len(stem) > 1:
+            for sibling in Path(p).parent.glob(stem[:-1] + "?" + Path(p).suffix):
+                if sibling.resolve() not in listed:
+                    print(f"WARNING: {what}: {sibling} looks like another part of the same file but is not listed")
+    return out
+
+
 def freeze(cfg: Mapping) -> dict:
     origins = origins_from_config(cfg)
-    src = cfg["truth"]
-    records = load_pums_persons(src["person_csvs"], origins, src.get("household_csvs", ()))
+    src = dict(cfg["truth"])
+    src["person_csvs"] = expand_paths(src["person_csvs"], "person_csvs")
+    src["household_csvs"] = expand_paths(src.get("household_csvs", ()), "household_csvs")
+    print("Reading person files: " + ", ".join(src["person_csvs"]))
+    if src["household_csvs"]:
+        print("Reading household files: " + ", ".join(src["household_csvs"]))
+    records = load_pums_persons(src["person_csvs"], origins, src["household_csvs"])
     manifest = freeze_truth(
         records,
         src["frozen_path"],
         origins,
-        meta={"source": src.get("source", "ACS 2020-2024 5-year PUMS"), "person_csvs": list(src["person_csvs"])},
+        meta={"source": src.get("source", "ACS 2020-2024 5-year PUMS"), "person_csvs": list(src["person_csvs"]),
+              "household_csvs": list(src["household_csvs"])},
     )
     log_run(
         cfg.get("run_log", "runs/run_log.jsonl"),
