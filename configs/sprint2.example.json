@@ -12,8 +12,8 @@
   ],
   "truth": {
     "source": "ACS 2020-2024 5-year PUMS",
-    "person_csvs": ["data/raw/psam_pusa.csv", "data/raw/psam_pusb.csv"],
-    "household_csvs": ["data/raw/psam_husa.csv", "data/raw/psam_husb.csv"],
+    "person_csvs": ["data/raw/psam_pus*.csv"],
+    "household_csvs": ["data/raw/psam_hus*.csv"],
     "frozen_path": "data/truth/acs_truth.csv.gz"
   },
   "targets": {
