@@ -11,6 +11,8 @@ committed (see `.gitignore`).
 
 ```
 src/synthpop/ipf.py        iterative proportional fitting on N-way tables
+src/synthpop/maxent.py     maximum-entropy tables under linear (margin) constraints
+src/synthpop/design_maxent.py  the max-entropy design on the Sprint 2 inputs
 src/synthpop/truth.py      load, recode (SCHL -> EDATTAIN) and freeze the ACS truth
 src/synthpop/selection.py  calibrated selection function, flow, biased survey sample
 src/synthpop/margins.py    manufactured control margins (never over education)
@@ -73,3 +75,29 @@ record seed, which does carry education) and `selection.json` (coefficients,
 calibration gaps, compositions). Every run is appended to `runs/run_log.jsonl`.
 
 The method is written up in [docs/sprint2_simulation_design.md](docs/sprint2_simulation_design.md).
+
+## Maximum-entropy design
+
+The second generator (after Wu et al. 2018): control margins as constraints,
+education constrained only to the sample's distribution within education
+strata (under 5, 5–17, 18+), maximum entropy over everything else. Adult
+education therefore comes out independent of origin, sex and age band
+(`pooled`) or of sex and age band given origin (`separate`): the baseline for
+the uncontrolled-attribute test in Sprint 4. After `sprint2 build`:
+
+```bash
+python -m synthpop.design_maxent configs/sprint2.json
+```
+
+For each SES strength this writes `data/sprint2/ses_<g>/maxent_<variant>/`
+holding `table.json` (the fitted origin × sex × age band × EDATTAIN table),
+`population.csv.gz` (synthetic people drawn from it) and `report.json`, logs
+the run, and prints adult university shares by origin for the flow, the
+sample and each variant. Spec and verification table:
+[docs/maxent_design.md](docs/maxent_design.md).
+
+```python
+from synthpop import maxent, margin, grouped_margin
+shape = (3, 4)
+res = maxent(shape, [margin(shape, (0,), [10, 20, 30]), margin(shape, (1,), [15, 15, 15, 15])])
+```

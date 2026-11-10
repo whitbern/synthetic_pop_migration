@@ -39,5 +39,11 @@
     "size": 1369,
     "tilt": {"ses": 1.0, "minor": -1.0}
   },
-  "controls": [["origin"], ["origin", "male"], ["origin", "age_band"]]
+  "controls": [["origin"], ["origin", "male"], ["origin", "age_band"]],
+  "maxent": {
+    "_comment": "Optional; these are the defaults. strata_edges: education strata as age-band edges (under 5, 5-17, 18+). variants: name -> control variables the sample's education shares are taken within ([] = pooled, [origin] = separate).",
+    "strata_edges": [0, 5, 18],
+    "variants": {"pooled": [], "separate": ["origin"]},
+    "population": true
+  }
 }
