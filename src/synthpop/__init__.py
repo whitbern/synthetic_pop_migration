@@ -8,6 +8,15 @@ from synthpop.ipf import (
     ipf,
     marginal,
 )
+from synthpop.maxent import (
+    Constraint,
+    MaxEntConvergenceError,
+    MaxEntResult,
+    draw_population,
+    grouped_margin,
+    margin,
+    maxent,
+)
 from synthpop.margins import Margins, PlantedAttributeError, crosstab, manufacture_margins
 from synthpop.selection import (
     CalibrationError,
@@ -27,6 +36,13 @@ __all__ = [
     "check_consistency",
     "ipf",
     "marginal",
+    "Constraint",
+    "MaxEntConvergenceError",
+    "MaxEntResult",
+    "draw_population",
+    "grouped_margin",
+    "margin",
+    "maxent",
     "CalibrationError",
     "DarienTargets",
     "Margins",
