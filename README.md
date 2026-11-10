@@ -10,8 +10,15 @@ committed (see `.gitignore`).
 ## Layout
 
 ```
-src/synthpop/ipf.py   iterative proportional fitting on N-way tables
-tests/test_ipf.py     analytic verification tests (no data needed)
+src/synthpop/ipf.py        iterative proportional fitting on N-way tables
+src/synthpop/truth.py      load, recode (SCHL -> EDATTAIN) and freeze the ACS truth
+src/synthpop/selection.py  calibrated selection function, flow, biased survey sample
+src/synthpop/margins.py    manufactured control margins (never over education)
+src/synthpop/runlog.py     JSON-lines run log
+src/synthpop/sprint2.py    Sprint 2 pipeline (python -m synthpop.sprint2)
+configs/                   example config; copy and fill in
+docs/                      method write-ups drafted alongside the code
+tests/                     analytic and simulated-data verification (no microdata)
 ```
 
 ## Setup
@@ -50,3 +57,19 @@ zeros (`InconsistentMarginsError`). If fitting still stalls it raises
 | 4 | Inconsistent margins fail loudly | `test_different_totals_fail`, `test_overlapping_margins_that_disagree_fail`, `test_infeasible_zero_pattern_fails_instead_of_returning_garbage` |
 | 5 | Idempotence | `test_refitting_a_fitted_table_changes_nothing`, `test_seed_that_already_fits_is_returned_unchanged` |
 | 6 | A planted three-way table is recovered | `test_planted_three_way_table_is_recovered` (plus a uniform-seed negative control) |
+
+## Sprint 2: ground truth and the selection mechanism
+
+```bash
+cp configs/sprint2.example.json configs/sprint2.json   # fill in POBP codes and origin shares
+python -m synthpop.sprint2 freeze configs/sprint2.json # raw PUMS -> data/truth/*.csv.gz + manifest
+python -m synthpop.sprint2 build  configs/sprint2.json # flow, margins, sample per SES strength
+```
+
+`build` writes, for each SES selection strength, `data/sprint2/ses_<g>/`
+holding `flow.csv.gz` (the planted truth), `margins.json` (origin, origin x
+sex, origin x age band; no education), `sample.csv.gz` (the biased ~1,369
+record seed, which does carry education) and `selection.json` (coefficients,
+calibration gaps, compositions). Every run is appended to `runs/run_log.jsonl`.
+
+The method is written up in [docs/sprint2_simulation_design.md](docs/sprint2_simulation_design.md).

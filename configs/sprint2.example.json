@@ -1,0 +1,43 @@
+{
+  "_comment": "Copy to configs/sprint2.json and fill in every null. POBP codes: check the PUMS data dictionary for your vintage. Origin shares: SENAFRONT/SNM Darien irregular-transit counts by nationality (raw counts or shares; they are renormalised to the groups listed). The first origin is the calibration reference.",
+  "seed": 20261109,
+  "run_log": "runs/run_log.jsonl",
+  "output_dir": "data/sprint2",
+  "origins": [
+    {"name": "Venezuela", "pobp": []},
+    {"name": "Haiti", "pobp": []},
+    {"name": "Cuba", "pobp": []},
+    {"name": "Ecuador", "pobp": []},
+    {"name": "Cameroon", "pobp": []}
+  ],
+  "truth": {
+    "source": "ACS 2020-2024 5-year PUMS",
+    "person_csvs": ["data/raw/psam_pusa.csv", "data/raw/psam_pusb.csv"],
+    "household_csvs": ["data/raw/psam_husa.csv", "data/raw/psam_husb.csv"],
+    "frozen_path": "data/truth/acs_truth.csv.gz"
+  },
+  "targets": {
+    "origin_shares": {
+      "_source": "Servicio Nacional de Migracion (Panama), Transito irregular por Darien, Cuadro No. 003, year 2022 (Dec 2022 release). Raw counts, Jan-Sep 2022 sum (total 151,582 entries; Venezuela 71.05%). Renormalised to the groups listed.",
+      "Venezuela": 107692,
+      "Haiti": 8613,
+      "Cuba": 4332,
+      "Ecuador": 6698,
+      "Cameroon": 923
+    },
+    "male_share": 0.715,
+    "mean_age": 31.0,
+    "elderly_share": 0.005,
+    "elderly_age": 65,
+    "tolerance": {"share": 0.005, "mean_age": 0.25}
+  },
+  "flow": {
+    "size": 151582,
+    "ses_strengths": [-2.0, -1.0, 0.0, 1.0, 2.0]
+  },
+  "sample": {
+    "size": 1369,
+    "tilt": {"ses": 1.0, "minor": -1.0}
+  },
+  "controls": [["origin"], ["origin", "male"], ["origin", "age_band"]]
+}
