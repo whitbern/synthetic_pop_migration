@@ -1,7 +1,9 @@
 # Simulation design (Sprint 2 draft)
 
-Draft text for the Method section, written while the code is fresh. Numbers in
-brackets are filled in from the run log once the real extract has been run.
+Draft text for the Method section, written while the code is fresh. Numbers
+are from the run of 10 Nov 2026 on the full national 5-year file (all four
+person and household parts); the run log holds the exact parameters and
+hashes. Items still in brackets need a citation.
 
 ## Planted truth
 
@@ -12,6 +14,20 @@ The extract is frozen once, as a gzipped CSV with a SHA-256 hash recorded in a
 manifest and in the run log. Every later step reads the frozen file, never the
 raw extract. Each record keeps its person weight `PWGTP` and the 80 replicate
 weights `PWGTP1`–`PWGTP80` for design-based variance in Sprint 4.
+
+The frozen truth holds 131,925 person records (SHA-256 `38c6df2d…`):
+
+| Origin | Records | Weighted population |
+| --- | ---: | ---: |
+| Cuba | 58,880 | 1,457,080 |
+| Venezuela | 25,669 | 730,261 |
+| Haiti | 24,975 | 791,783 |
+| Ecuador | 19,475 | 551,583 |
+| Cameroon | 2,926 | 93,953 |
+
+Cameroon is the sparse tail. In the ACS the order of group sizes differs from
+the flow's, where Venezuela dominates, so the selection function does most of
+its work on origin.
 
 Recodes: sex (male indicator), age in years and in eight bands (0–4, 5–17,
 18–24, 25–34, 35–44, 45–54, 55–64, 65+), and an SES proxy equal to the
@@ -40,7 +56,7 @@ target composition exactly:
 | Target | Value | Source |
 | --- | --- | --- |
 | Origin shares | Venezuela 0.840, Haiti 0.067, Ecuador 0.052, Cuba 0.034, Cameroon 0.007 | Servicio Nacional de Migración (Panama), irregular transit through Darién by nationality (Cuadro 003), Jan–Sep 2022: 151,582 entries, 71.05% Venezuelan; renormalised to the five study groups (84.6% of the flow) |
-| Male share | 0.745 | midpoint of the 68–75% range |
+| Male share | 0.715 | midpoint of the 68–75% range |
 | Mean age | 31.0 years | |
 | Share aged 65+ | 0.005 | "almost no elderly" |
 
@@ -54,18 +70,36 @@ together) raise an error instead of returning a flow that silently misses; run
 with `strict=False`, the gap is reported. Propensities are scaled so the largest
 is 1; only their ratios affect the flow's composition.
 
-The flow is drawn as a finite population of [151,582] people: each is a copy
+The flow is drawn as a finite population of 151,582 people, the Jan–Sep 2022 count,: each is a copy
 of a truth record chosen with probability proportional to *w_i p_i*. Its
 realised composition differs from the targets by sampling error only, which
 the pipeline reports against the stated tolerance (±0.5 share points, ±0.25
-years of mean age).
+years of mean age). At every γ below, every calibrated moment was met to
+better than 1e-9, and the drawn flows stayed within tolerance: at most 0.18
+share points on sex and origin, and 0.10 years on mean age.
 
 **Calibration is underdetermined.** The targets fix θ given γ, but every γ
 gives a flow that matches them. The flows differ in what the targets do not
-control. On the simulated test truth, moving γ from −2 to +2 moves the
-university share of the flow from about 4% to 16% with the composition targets
-unchanged. Results are therefore reported across a range of γ, [−2, −1, 0, 1,
-2], not at one setting.
+control. On the ACS truth, with the composition targets identical:
+
+| γ | Mean SES rank | Less than primary | Primary | Secondary | University |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| −4 | 0.24 | 16.9% | 15.4% | 41.0% | 25.3% |
+| −2 | 0.36 | 16.0% | 15.4% | 39.8% | 27.4% |
+| 0 | 0.51 | 15.0% | 14.7% | 38.5% | 30.5% |
+| +2 | 0.65 | 14.1% | 14.6% | 36.8% | 33.1% |
+| +4 | 0.76 | 13.4% | 14.2% | 34.8% | 35.9% |
+
+(Shares of the whole flow; the remaining 1.4–1.7% are under 3, not in
+universe.) The planted attribute's university share moves by 10.6 points
+while every margin the designs see stays the same. A range of ±2 moved it by
+only 5.8 points, too little to separate the designs, so results are reported
+across γ ∈ {−4, −2, 0, 2, 4}, not at one setting.
+
+Two notes for the write-up. The "less than primary" share is mostly children
+who have not finished school yet, so Sprint 4 scores the planted attribute on
+adults. And at 25–36% university, the ACS truth is far more educated than any
+plausible Darién flow (see External validity).
 
 ## Manufactured inputs
 
@@ -73,7 +107,7 @@ unchanged. Results are therefore reported across a range of γ, [−2, −1, 0, 
 origin × sex, and origin × age band. They never include education. The code
 refuses any control margin over `SCHL` or `EDATTAIN`.
 
-**Sample** (standing in for the BPM): [1,369] people drawn from the flow
+**Sample** (standing in for the BPM): 1,369 people, the BPM's size, drawn from the flow
 without replacement, with propensity exp(λ·x_j) using the
 Efraimidis–Spirakis weighted-sampling scheme. The default tilt is λ = +1 on
 the SES rank and −1 on being a minor; the designs are never told these

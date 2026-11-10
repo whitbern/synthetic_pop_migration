@@ -12,8 +12,8 @@
   ],
   "truth": {
     "source": "ACS 2020-2024 5-year PUMS",
-    "person_csvs": ["data/raw/psam_pusa.csv", "data/raw/psam_pusb.csv"],
-    "household_csvs": ["data/raw/psam_husa.csv", "data/raw/psam_husb.csv"],
+    "person_csvs": ["data/raw/psam_pus*.csv"],
+    "household_csvs": ["data/raw/psam_hus*.csv"],
     "frozen_path": "data/truth/acs_truth.csv.gz"
   },
   "targets": {
@@ -25,7 +25,7 @@
       "Ecuador": 6698,
       "Cameroon": 923
     },
-    "male_share": 0.715,
+    "male_share": 0.745,
     "mean_age": 31.0,
     "elderly_share": 0.005,
     "elderly_age": 65,
@@ -33,7 +33,7 @@
   },
   "flow": {
     "size": 151582,
-    "ses_strengths": [-2.0, -1.0, 0.0, 1.0, 2.0]
+    "ses_strengths": [-4.0, -2.0, 0.0, 2.0, 4.0]
   },
   "sample": {
     "size": 1369,
