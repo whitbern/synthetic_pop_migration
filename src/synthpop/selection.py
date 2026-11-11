@@ -48,6 +48,7 @@ __all__ = [
     "draw_survey_sample",
     "realize_flow",
     "select_flow",
+    "survey_sample_keys",
     "sweep_selection_strength",
 ]
 
@@ -375,12 +376,27 @@ def draw_survey_sample(
     N = n_records(flow)
     if not 0 < n <= N:
         raise ValueError(f"sample size {n} must be in 1..{N}")
+    keys = survey_sample_keys(flow, tilt, rng)
+    idx = np.sort(np.argpartition(keys, n - 1)[:n])
+    return subset(flow, idx), idx
+
+
+def survey_sample_keys(
+    flow: Records,
+    tilt: Mapping[str, tuple[np.ndarray, float]] | None,
+    rng: np.random.Generator,
+) -> np.ndarray:
+    """Efraimidis–Spirakis keys for :func:`draw_survey_sample`: smallest ``n`` = the sample.
+
+    Exposed so that nested samples can be taken: the ``n`` smallest keys of
+    any subset of the flow are a tilted sample of size ``n`` from that subset,
+    and the samples for ``n < m`` are contained in the one for ``m``.
+    """
+    N = n_records(flow)
     eta = np.zeros(N)
     for feat, coef in (tilt or {}).values():
         eta += float(coef) * np.asarray(feat, dtype=float)
     # key_j = log(U_j) / w_j; the n largest keys are a weighted sample without
     # replacement. Work in logs: log(-log U) - eta, smallest n.
     u = rng.random(N)
-    keys = np.log(-np.log(u)) - eta
-    idx = np.sort(np.argpartition(keys, n - 1)[:n])
-    return subset(flow, idx), idx
+    return np.log(-np.log(u)) - eta
