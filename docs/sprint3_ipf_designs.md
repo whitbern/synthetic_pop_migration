@@ -254,28 +254,64 @@ the Sprint 2 sample, depending on γ. Crossover is on paired adult SRMSE, with
 | Separate fails at the Sprint 2 size (*n* = 10–20) | 100% | 100% | 100% | 100% | 98–100% |
 
 **The main result, first draft.** On the joint of education with sex and
-age, separate estimation of Cameroon starts beating pooled at about **140 to
-280 sample members** across the five SES selection strengths. That is
-**10 to 30 times** what a BPM-sized survey gives the group. At the actual
+age, separate estimation of Cameroon starts beating pooled at about **120 to
+290 sample members** across the five SES selection strengths (fine run,
+below). That is **9 to 36 times** what a BPM-sized survey gives the group. At the actual
 size, separate cannot even be fitted: it failed in every replicate at every
 γ (98% at *n* = 20, γ = +4).
 
 Three caveats belong next to that number:
 
 1. **The error crossover is not the usable threshold.** At the crossover,
-   separate still fails to fit in 54–84% of draws. Its error curve is
+   separate still fails to fit in 27–86% of draws (fine run). Its error curve is
    computed on the draws where it did fit, which flatters it. Separate fits
    reliably (≤ 5% failures) only at *n* = 640, for γ = 0 and +4. That is more
    than half of all Cameroonians in the flow.
 2. **The crossover does not move monotonically with γ** (≈ 138 at γ = 0,
-   ≈ 277 at γ = −2). With 50 replicates and a geometric grid, the
-   interpolation between 160 and 320 is coarse. Before quoting it more
-   precisely than "a few hundred", add sizes between 120 and 400 and more
-   replicates.
+   ≈ 277 at γ = −2). The fine run below confirms this is real, not
+   interpolation noise, and explains it.
 3. **It depends on the metric.** On university share alone, the per-origin
    tables above suggest separate would win much earlier, because the
    pooled bias is large and the marginal is cheap to estimate. Sprint 4
    should locate the crossover under TVD of education too.
+
+#### Fine run
+
+Same inputs; sizes 40, 80, 120, 160, 200, 240, 280, 320, 400, 480, 640; 200
+replicates per size (`configs/sprint2.json`, output `data/sprint3_fine/`).
+
+![Pooled vs separate IPF as the Cameroon sample shrinks](figures/sprint3_crossover_fine.png)
+
+| γ | −4 | −2 | 0 | +2 | +4 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Crossover *n*, first pass (50 reps) | ≈ 146 | ≈ 277 | ≈ 138 | ≈ 154 | ≈ 256 |
+| **Crossover *n*, fine run (200 reps)** | **≈ 143** | **≈ 285** | **≈ 118** | **≈ 163** | **≈ 265** |
+| Pooled SRMSE at *n* = 40 | 0.567 | 0.410 | 0.624 | 0.523 | 0.401 |
+| Separate fails at the nearest grid size to the crossover | 77% (160) | 50–55% (280–320) | 72% (120) | 86% (160) | 27% (280) |
+| Separate fails at *n* = 640 | 16% | 14% | 3% | 33% | 1% |
+
+The two runs agree within 20 people at every γ, so the crossover is stable
+under replication. **It falls between about 120 and 290 Cameroonians**, 9 to
+36 times the 8–13 in a BPM-sized sample.
+
+**Why it isn't monotone in γ: the crossover tracks how far Cameroon is from
+the pool.** Order the five γ by pooled SRMSE at the smallest size, which
+measures how badly the borrowed (mostly Venezuelan) education pattern fits
+Cameroon: 0.624 (γ = 0), 0.567 (−4), 0.523 (+2), 0.410 (−2), 0.401 (+4).
+The crossovers come out in exactly that order: 118, 143, 163, 285, 265.
+The last two are within replication noise of each other. The more
+Cameroon's joint differs from the pooled one, the sooner its own sample
+wins. That is the bias–variance trade the design question is about, and it
+gives the result a mechanism: the threshold is a function of between-group
+heterogeneity, not of the selection strength as such. A Sprint 4 check is
+to plot crossover *n* against a direct heterogeneity measure (for example,
+the TVD between Cameroon's and the pooled adult education distribution in
+the truth).
+
+**Usable is later still.** Separate fits in at least 95% of draws only at
+*n* = 640 for γ = 0 and +4, and in none of the five γ before *n* = 480. At
+the crossover itself it still fails in 27–86% of draws, always on an empty
+age band.
 
 Simulated dry run (three groups; the thin group is 1.5% of the flow, about
 900 people, with 20–24 in the Sprint 2 sample; 20 replicates; `drop_age_edges
