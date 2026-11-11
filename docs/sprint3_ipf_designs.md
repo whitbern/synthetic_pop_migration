@@ -5,11 +5,10 @@ Draft text for the Method section, plus first results. Code:
 (the thin-group experiment and plot), `src/synthpop/scoring.py` (first-pass
 scores). Verification: `tests/test_design_ipf.py`.
 
-**Status.** Everything below runs end to end on simulated data. The ACS
-numbers are not in yet: the tables marked *[ACS run]* are filled from
-`python -m synthpop.design_ipf` and `python -m synthpop.crossover` on the
-real Sprint 2 inputs. The simulated numbers quoted here only show what the
-output looks like; they are not results.
+**Status.** ACS results are in, from the run of 10 Nov 2026 on the full
+Sprint 2 inputs (strict settings: no age bands merged; 50 replicates). The
+run log holds the exact parameters and hashes. A simulated dry run is kept
+at the end of the crossover section for comparison.
 
 ## The two designs as implemented
 
@@ -118,9 +117,79 @@ primary" among children mostly means not finished yet), against the flow
 `design_maxent` has been run and no age bands were merged, so all four
 designs print in one table.
 
-*[ACS run: SRMSE and university-share error by origin, pooled vs separate,
-γ = −4 … +4; which groups the separate design could not fit, and the empty
-cells it reported.]*
+### Results on the ACS inputs
+
+**Pooled fitted at every γ.** The whole sample had people in every age band,
+so the optional merge was not needed, and every result below is strict.
+
+**Separate fitted only Venezuela at every γ.** Each of the other groups
+failed at least once, and Cameroon and Cuba failed at every γ:
+
+| γ | Separate could not fit (sample *n*; empty control cells) |
+| ---: | --- |
+| −4 | Haiti (92; 65+), Cuba (46; 65+), Ecuador (86; 65+), Cameroon (10; 0–4, 45–54, 65+) |
+| −2 | Cuba (51; 0–4, 5–17), Ecuador (76; 0–4, 65+), Cameroon (13; 0–4, 5–17, 55–64) |
+| 0 | Haiti (84; 65+), Cuba (47; 0–4), Cameroon (13; 0–4, 5–17, 55–64, 65+) |
+| +2 | Cuba (44; 0–4), Ecuador (92; 65+), Cameroon (9; 0–4, 5–17, 65+) |
+| +4 | Haiti (92; 0–4), Cuba (48; 0–4), Cameroon (8; 0–4, 5–17, 65+) |
+
+Every failure was an empty **age band**, never education. The bands that
+break the fit are the ones the selection makes rare: under-5s (rare among
+people born abroad) and 65+ (0.5% by calibration). Groups of 80–90 sample
+members still failed on a single empty band. So the separate design's
+practical limit is set by the finest control margin, not by the planted
+attribute.
+
+**Adult SRMSE within origin:**
+
+| γ | Design | Venezuela | Haiti | Cuba | Ecuador | Cameroon |
+| ---: | --- | ---: | ---: | ---: | ---: | ---: |
+| −4 | pooled | 0.273 | 0.773 | 0.664 | 0.828 | 0.577 |
+| | separate | 0.293 | fail | fail | fail | fail |
+| −2 | pooled | 0.200 | 0.899 | 0.849 | 0.979 | 0.426 |
+| | separate | 0.246 | 0.666 | fail | fail | fail |
+| 0 | pooled | 0.190 | 0.763 | 0.721 | 0.916 | 0.636 |
+| | separate | 0.214 | fail | fail | 0.943 | fail |
+| +2 | pooled | 0.183 | 0.907 | 0.799 | 0.911 | 0.534 |
+| | separate | 0.225 | 1.391 | fail | fail | fail |
+| +4 | pooled | 0.234 | 0.741 | 0.601 | 0.792 | 0.420 |
+| | separate | 0.195 | fail | fail | 0.881 | fail |
+
+**Adult university share, synthetic minus truth (percentage points):**
+
+| γ | Design | Venezuela | Haiti | Cuba | Ecuador | Cameroon |
+| ---: | --- | ---: | ---: | ---: | ---: | ---: |
+| −4 | pooled | −0.8 | +22.6 | +18.8 | +21.8 | −9.6 |
+| | separate | +2.8 | fail | fail | fail | fail |
+| −2 | pooled | −0.2 | +24.3 | +21.8 | +24.9 | −4.3 |
+| | separate | +3.2 | +6.6 | fail | fail | fail |
+| 0 | pooled | −2.2 | +21.9 | +19.8 | +24.5 | −9.7 |
+| | separate | +1.3 | fail | fail | +9.3 | fail |
+| +2 | pooled | −1.2 | +22.3 | +20.2 | +23.9 | −4.0 |
+| | separate | +3.0 | +0.4 | fail | fail | fail |
+| +4 | pooled | −4.4 | +18.5 | +14.3 | +20.4 | −5.9 |
+| | separate | −0.4 | fail | fail | +0.3 | fail |
+
+What the tables say:
+
+- **Pooled is Venezuela's design.** Venezuelans are 84% of the flow and of
+  the sample, so the pooled seed is essentially the Venezuelan seed.
+  Venezuela's scores barely depend on the design.
+- **Pooling erases the between-group gaps in education.** Pooled
+  overstates adult university completion by 14–25 points for Haiti, Cuba
+  and Ecuador at every γ, and understates it by 4–10 points for Cameroon.
+  This is the between-group shrinkage Sprint 4 is set up to measure, and it
+  is already large here.
+- **Where separate fits, it removes most of that bias.** For example: Haiti
+  at γ = +2, +0.4 points against pooled's +22.3; Ecuador at γ = +4, +0.3
+  against +20.4.
+- **The two metrics disagree.** At those same fits, separate's SRMSE is
+  *worse* (Haiti at γ = +2: 1.39 vs 0.91), because 40–90 people spread over
+  six adult age bands × two sexes × five education levels give a noisy joint
+  even when the education marginal is right. Which design wins a non-thin
+  group depends on whether the target is the education distribution or its
+  joint with age and sex. Sprint 4 should report both, and the paper should
+  say which one the crossover uses (here, SRMSE of the joint).
 
 ## The crossover experiment
 
@@ -164,15 +233,49 @@ Two side effects to state in the write-up:
 - **Pooled moves too.** The thin group's members are part of the pooled seed,
   so pooled improves slightly as *n* grows.
 - **The top of the grid is a large share of the group.** At *n* = 640 the
-  sample is about 70% of the group's flow members. Separate's error there is
+  sample is 56–63% of the group's flow members on the ACS inputs. Separate's error there is
   shrunk by the finite-population effect, which a real survey of a
   ~1,000-person group would also have. The crossover sits well below that in
   every simulated run where it was found.
 
 ### First results
 
-*[ACS run: crossover n by γ, the plot `data/sprint3/crossover.png`, and
-separate's failure rate at the Sprint 2 sample size.]*
+Cameroon on the ACS inputs: 1,020–1,150 Cameroonians in the flow and 8–13 in
+the Sprint 2 sample, depending on γ. Crossover is on paired adult SRMSE, with
+50 replicates per size. Plot: `data/sprint3/crossover.png`.
+
+| γ | −4 | −2 | 0 | +2 | +4 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Cameroon in flow | 1,129 | 1,050 | 1,095 | 1,020 | 1,150 |
+| Cameroon in Sprint 2 sample | 10 | 13 | 13 | 9 | 8 |
+| **Crossover *n*** | **≈ 146** | **≈ 277** | **≈ 138** | **≈ 154** | **≈ 256** |
+| Separate fails at *n* = 160 | 74% | 78% | 64% | 84% | 54% |
+| Separate fails at *n* = 640 | 12% | 22% | 4% | 28% | 0% |
+| Separate fails at the Sprint 2 size (*n* = 10–20) | 100% | 100% | 100% | 100% | 98–100% |
+
+**The main result, first draft.** On the joint of education with sex and
+age, separate estimation of Cameroon starts beating pooled at about **140 to
+280 sample members** across the five SES selection strengths. That is
+**10 to 30 times** what a BPM-sized survey gives the group. At the actual
+size, separate cannot even be fitted: it failed in every replicate at every
+γ (98% at *n* = 20, γ = +4).
+
+Three caveats belong next to that number:
+
+1. **The error crossover is not the usable threshold.** At the crossover,
+   separate still fails to fit in 54–84% of draws. Its error curve is
+   computed on the draws where it did fit, which flatters it. Separate fits
+   reliably (≤ 5% failures) only at *n* = 640, for γ = 0 and +4. That is more
+   than half of all Cameroonians in the flow.
+2. **The crossover does not move monotonically with γ** (≈ 138 at γ = 0,
+   ≈ 277 at γ = −2). With 50 replicates and a geometric grid, the
+   interpolation between 160 and 320 is coarse. Before quoting it more
+   precisely than "a few hundred", add sizes between 120 and 400 and more
+   replicates.
+3. **It depends on the metric.** On university share alone, the per-origin
+   tables above suggest separate would win much earlier, because the
+   pooled bias is large and the marginal is cheap to estimate. Sprint 4
+   should locate the crossover under TVD of education too.
 
 Simulated dry run (three groups; the thin group is 1.5% of the flow, about
 900 people, with 20–24 in the Sprint 2 sample; 20 replicates; `drop_age_edges
