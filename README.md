@@ -13,6 +13,9 @@ committed (see `.gitignore`).
 src/synthpop/ipf.py        iterative proportional fitting on N-way tables
 src/synthpop/maxent.py     maximum-entropy tables under linear (margin) constraints
 src/synthpop/design_maxent.py  the max-entropy design on the Sprint 2 inputs
+src/synthpop/design_ipf.py     pooled and separate IPF on the Sprint 2 inputs
+src/synthpop/crossover.py      thin-group crossover experiment and plot
+src/synthpop/scoring.py        within-origin scores against the planted truth
 src/synthpop/truth.py      load, recode (SCHL -> EDATTAIN) and freeze the ACS truth
 src/synthpop/selection.py  calibrated selection function, flow, biased survey sample
 src/synthpop/margins.py    manufactured control margins (never over education)
@@ -95,6 +98,27 @@ holding `table.json` (the fitted origin × sex × age band × EDATTAIN table),
 the run, and prints adult university shares by origin for the flow, the
 sample and each variant. Spec and verification table:
 [docs/maxent_design.md](docs/maxent_design.md).
+
+## Sprint 3: pooled vs separate IPF and the crossover
+
+After `sprint2 build` (PowerShell, one command per line):
+
+```powershell
+pip install -e ".[data,plot]"
+python -m synthpop.design_ipf configs/sprint2.json
+python -m synthpop.crossover configs/sprint2.json
+```
+
+`design_ipf` writes `data/sprint2/ses_<g>/ipf_pooled/` and `ipf_separate/`
+(`table.json`, `population.csv.gz`, `report.json`) and prints adult SRMSE and
+university-share error by origin, plus any group the separate design could not
+fit and the empty control cells that stopped it. `crossover` subsamples the
+thin group (Cameroon by default) through sizes 5 to 640, 50 replicates per size,
+and writes `data/sprint3/crossover_runs.csv`, `crossover_summary.json` and
+`crossover.png`. Optional config keys: `"ipf": {"drop_age_edges": [5]}` merges
+0–4 into 5–17 (a reported, global aggregation), and `"crossover": {"origin",
+"sizes", "replicates", "output_dir"}`. Write-up:
+[docs/sprint3_ipf_designs.md](docs/sprint3_ipf_designs.md).
 
 ```python
 from synthpop import maxent, margin, grouped_margin

@@ -45,5 +45,18 @@
     "strata_edges": [0, 5, 18],
     "variants": {"pooled": [], "separate": ["origin"]},
     "population": true
+  },
+  "ipf": {
+    "_comment": "Optional. drop_age_edges: age-band lower edges to remove for IPF (e.g. [5] merges 0-4 into 0-17); global and reported, never per origin. Default [] (strict).",
+    "drop_age_edges": [],
+    "variants": ["pooled", "separate"],
+    "population": true
+  },
+  "crossover": {
+    "_comment": "Optional. origin: thin group (default: smallest in the flow). sizes are capped at its flow count.",
+    "origin": "Cameroon",
+    "sizes": [5, 10, 20, 40, 80, 160, 320, 640],
+    "replicates": 50,
+    "output_dir": "data/sprint3"
   }
 }
