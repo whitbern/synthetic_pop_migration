@@ -32,7 +32,7 @@ import numpy as np
 
 from synthpop.truth import AGE_BANDS
 
-__all__ = ["ADULT_AGE", "adult_bands", "score_origin", "score_table", "srmse", "tvd"]
+__all__ = ["ADULT_AGE", "adult_bands", "heterogeneity", "score_origin", "score_table", "srmse", "tvd"]
 
 ADULT_AGE = 18
 
@@ -87,3 +87,37 @@ def score_table(estimate: np.ndarray, truth: np.ndarray, variables: Sequence[str
     """:func:`score_origin` for every origin group, keyed by name."""
     return {name: score_origin(estimate, truth, variables, k, band_edges=band_edges)
             for k, name in enumerate(origin_names)}
+
+
+def heterogeneity(truth: np.ndarray, variables: Sequence[str], origin: int, attribute: str = "edattain",
+                  band_edges: Sequence[int] = AGE_BANDS) -> dict:
+    """How far one origin group's adult education is from the pool's, in the truth.
+
+    * ``tvd_edattain_vs_pool``: TVD between the group's adult education
+      distribution and that of all adults (every origin, the group included).
+    * ``pooled_limit_tvd``: TVD, over the group's adult sex x age band x
+      education cells, between the truth and what pooled IPF gives the group
+      when its seed is the *whole truth* (a perfect, infinite sample): the
+      pool's table fitted to the group's own margins on every control that is
+      not origin. This is the bias pooled estimation keeps however large the
+      sample, so it is the natural x-axis for the crossover. Assumes the
+      default controls: one-way margins of every non-origin control within
+      origin.
+    """
+    from synthpop.ipf import ipf
+
+    variables = list(variables)
+    o, a, e = variables.index("origin"), variables.index("age_band"), variables.index(attribute)
+    t = np.moveaxis(np.asarray(truth, dtype=float), [o, e], [0, -1])  # origin first, attribute last
+    group, pool = t[origin], t.sum(axis=0)
+    ctrl_axes = range(group.ndim - 1)
+    margins = [((k,), group.sum(axis=tuple(x for x in range(group.ndim) if x != k))) for k in ctrl_axes]
+    limit = ipf(pool, margins, tol=1e-12, max_iter=10_000).table
+    a_new = [v for v in variables if v not in ("origin", attribute)].index("age_band")
+    adults = adult_bands(band_edges)
+    g_ad, l_ad, p_ad = (np.take(x, adults, axis=a_new) for x in (group, limit, pool))
+    flat = tuple(range(g_ad.ndim - 1))
+    return {
+        "tvd_edattain_vs_pool": tvd(g_ad.sum(axis=flat), p_ad.sum(axis=flat)),
+        "pooled_limit_tvd": tvd(l_ad, g_ad),
+    }

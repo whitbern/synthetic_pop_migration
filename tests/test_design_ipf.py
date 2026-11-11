@@ -173,3 +173,28 @@ def test_crossover_experiment_runs_and_separate_stops_failing(thin):
     assert all(e["pooled_failure_rate"] == 0.0 for e in s["by_size"])
     m40, m400 = by_n[40]["separate"]["median"], by_n[400]["separate"]["median"]
     assert m400 is not None and (m40 is None or m400 < m40)
+
+
+def test_heterogeneity_is_zero_for_a_group_like_the_pool():
+    from synthpop.scoring import heterogeneity
+    rng = np.random.default_rng(0)
+    base = rng.uniform(1, 10, (2, 8, 5))
+    truth = np.stack([base * 3, base * 1])  # two origins, identical shape
+    h = heterogeneity(truth, ("origin", "male", "age_band", "edattain"), 1)
+    assert h["tvd_edattain_vs_pool"] == pytest.approx(0, abs=1e-12)
+    assert h["pooled_limit_tvd"] == pytest.approx(0, abs=1e-12)
+
+
+def test_pooled_limit_is_what_pooled_ipf_gives_with_the_truth_as_seed(rich):
+    """With the whole flow as the seed, pooled IPF's error for a group is exactly the pooled-limit TVD."""
+    from synthpop.scoring import adult_bands, heterogeneity
+    flow, margins, _, edges = rich
+    variables = ("origin", "male", "age_band", "edattain")
+    truth = crosstab(flow, variables, dict(margins.levels, edattain=5))
+    d = fit_ipf_design(margins, flow, "pooled", age_edges=edges)
+    adults = adult_bands(edges)
+    for k in range(len(ORIGINS)):
+        h = heterogeneity(truth, variables, k, band_edges=edges)
+        est, tru = d.table[k][:, adults], truth[k][:, adults]
+        assert h["pooled_limit_tvd"] == pytest.approx(tvd(est, tru), abs=1e-8)
+        assert h["pooled_limit_tvd"] > 0.01  # the simulated origins do differ
