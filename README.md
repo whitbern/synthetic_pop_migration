@@ -117,7 +117,10 @@ thin group (Cameroon by default) through sizes 5 to 640, 50 replicates per size,
 and writes `data/sprint3/crossover_runs.csv`, `crossover_summary.json` and
 `crossover.png`. Optional config keys: `"ipf": {"drop_age_edges": [5]}` merges
 0–4 into 5–17 (a reported, global aggregation), and `"crossover": {"origin",
-"sizes", "replicates", "output_dir"}`. Write-up:
+"sizes", "replicates", "output_dir"}`. `"origins": [...]` runs several groups and
+`"metrics": ["srmse", "tvd_edattain"]` locates the crossover under each; every
+run also writes `crossover_vs_heterogeneity.csv/.png` (crossover *n* against how
+far the group is from the pool; see [docs/sprint4_crossover.md](docs/sprint4_crossover.md)). Write-up:
 [docs/sprint3_ipf_designs.md](docs/sprint3_ipf_designs.md).
 
 ```python

@@ -54,7 +54,7 @@ from synthpop.design_ipf import coarsen_age_bands, fit_ipf_design
 from synthpop.design_maxent import load_margins
 from synthpop.margins import Margins, crosstab
 from synthpop.runlog import log_run
-from synthpop.scoring import score_origin
+from synthpop.scoring import heterogeneity, score_origin
 from synthpop.selection import survey_sample_keys
 from synthpop.truth import AGE_BANDS, EDATTAIN_LABELS, Records, load_frozen_truth, subset
 
@@ -169,8 +169,11 @@ _POOLED, _SEPARATE = "#2a78d6", "#eb6834"  # categorical slots 1 and 2
 _INK, _MUTED, _GRID = "#0b0b0b", "#52514e", "#e4e3df"
 
 
+METRIC_LABELS = {"srmse": "adult SRMSE (sex x age x education)", "tvd_edattain": "adult education TVD"}
+
+
 def plot_crossover(summaries: Mapping[str, dict], path: str | Path, thin_name: str,
-                   sprint2_n: Mapping[str, int] | None = None) -> None:
+                   sprint2_n: Mapping[str, int] | None = None, metric: str = "srmse") -> None:
     """Small multiples, one column per SES strength: error (top) and separate's failure rate (bottom)."""
     import matplotlib
 
@@ -212,7 +215,8 @@ def plot_crossover(summaries: Mapping[str, dict], path: str | Path, thin_name: s
                 ax.spines[side].set_visible(False)
             ax.tick_params(colors=_MUTED, labelsize=8)
         bot.set_xlabel(f"{thin_name} sample size n", fontsize=9, color=_INK)
-    axes[0, 0].set_ylabel(f"{thin_name} adult SRMSE\n(median, IQR band)", fontsize=9, color=_INK)
+    axes[0, 0].set_ylabel(f"{thin_name} {METRIC_LABELS.get(metric, metric)}\n(median, IQR band)", fontsize=8,
+                          color=_INK)
     axes[1, 0].set_ylabel("separate\nfails to fit", fontsize=9, color=_INK)
     handles, labels = axes[0, 0].get_legend_handles_labels()
     fig.legend(handles, labels, frameon=False, fontsize=9, loc="upper right", ncol=2)
@@ -226,6 +230,64 @@ def plot_crossover(summaries: Mapping[str, dict], path: str | Path, thin_name: s
 # --- Pipeline ----------------------------------------------------------------
 
 
+def plot_heterogeneity(points: Sequence[Mapping], path: str | Path, metrics: Sequence[str]) -> None:
+    """Crossover n against pooled-limit TVD, one panel per metric, one colour per origin, labelled by γ."""
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    import matplotlib.ticker  # noqa: F401
+
+    colors = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4"]  # categorical slots, fixed order
+    origins = list(dict.fromkeys(p["origin"] for p in points))
+    fig, axes = plt.subplots(1, len(metrics), figsize=(4.6 * len(metrics), 4.0), squeeze=False, sharex=True)
+    for j, metric in enumerate(metrics):
+        ax = axes[0, j]
+        for k, origin in enumerate(origins):
+            pts = [p for p in points if p["origin"] == origin and p["metric"] == metric and p["crossover_n"]]
+            if pts:
+                x = [p["pooled_limit_tvd"] for p in pts]
+                y = [p["crossover_n"] for p in pts]
+                ax.scatter(x, y, s=40, color=colors[k % len(colors)], edgecolor="white", linewidth=1.5,
+                           label=origin, zorder=3)
+                for p in pts:
+                    ax.annotate(f"{p['ses_strength']:+g}", (p["pooled_limit_tvd"], p["crossover_n"]), fontsize=7,
+                                color=_MUTED, xytext=(4, 3), textcoords="offset points")
+        n_missing = sum(1 for p in points if p["metric"] == metric and not p["crossover_n"])
+        if n_missing:
+            ax.text(0.98, 0.02, f"{n_missing} without a crossover (see CSV)", transform=ax.transAxes,
+                    fontsize=7, color=_MUTED, ha="right")
+        ax.set_yscale("log")
+        ax.yaxis.set_major_locator(matplotlib.ticker.LogLocator(base=10, subs=(1.0, 2.0, 5.0)))
+        ax.yaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda v, _: f"{v:g}"))
+        ax.yaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
+        ax.set_title(f"Crossover on {METRIC_LABELS.get(metric, metric)}", fontsize=9, color=_INK)
+        ax.set_xlabel("pooled-limit TVD (how far the group is from the pool)", fontsize=8, color=_INK)
+        ax.grid(True, color=_GRID, linewidth=0.6)
+        ax.set_axisbelow(True)
+        for side in ("top", "right"):
+            ax.spines[side].set_visible(False)
+        ax.tick_params(colors=_MUTED, labelsize=8)
+    axes[0, 0].set_ylabel("crossover sample size n", fontsize=9, color=_INK)
+    handles, labels = {}, []
+    for ax in axes[0]:
+        for h, lab in zip(*ax.get_legend_handles_labels()):
+            handles.setdefault(lab, h)
+    fig.legend(list(handles.values()), list(handles), frameon=False, fontsize=8, loc="upper right",
+               ncol=len(handles) or 1)
+    fig.tight_layout(rect=(0, 0, 1, 0.93))
+    fig.savefig(path, dpi=150)
+    plt.close(fig)
+
+
+def _origins_from_config(ccfg: Mapping) -> list[str] | None:
+    if "origins" in ccfg:
+        return list(ccfg["origins"])
+    if ccfg.get("origin"):
+        return [ccfg["origin"]]
+    return None
+
+
 def run(cfg: Mapping) -> dict:
     from synthpop.sprint2 import feature
 
@@ -236,11 +298,14 @@ def run(cfg: Mapping) -> dict:
     out.mkdir(parents=True, exist_ok=True)
     seed = int(cfg.get("seed", 20261109))
     replicates = int(ccfg.get("replicates", 50))
+    metrics = list(ccfg.get("metrics", ["srmse"]))
     tilt_cfg = cfg.get("sample", {}).get("tilt", {})
     drop_edges = [int(e) for e in cfg.get("ipf", {}).get("drop_age_edges", [])]
+    thin_names = _origins_from_config(ccfg)
 
-    all_rows, summaries, sprint2_n, inputs = [], {}, {}, []
-    thin_name = ccfg.get("origin")
+    all_rows, inputs, points = [], [], []
+    summaries: dict[str, dict[str, dict]] = {}  # "<origin>|<metric>" -> {γ key -> summary}
+    sprint2_n: dict[str, dict[str, int]] = {}
     for strength in cfg["flow"]["ses_strengths"]:
         d = root / f"ses_{strength:+.2f}"
         margins = load_margins(d / "margins.json")
@@ -248,58 +313,91 @@ def run(cfg: Mapping) -> dict:
         flow, _ = load_frozen_truth(d / "flow.csv.gz")
         inputs += [d / "margins.json", d / "sample.csv.gz", d / "flow.csv.gz"]
         counts = np.bincount(flow["origin"], minlength=len(origin_names))
-        if thin_name is None:
-            thin_name = origin_names[int(np.argmin(counts))]
-        thin = origin_names.index(thin_name)
-        sizes = [n for n in ccfg.get("sizes", DEFAULT_SIZES) if n <= counts[thin]]
+        if thin_names is None:
+            thin_names = [origin_names[int(np.argmin(counts))]]
         tilt = {name: (feature(flow, name, origin_names), coef) for name, coef in tilt_cfg.items()}
         margins, (sample, flow), edges = coarsen_age_bands(margins, [sample, flow], drop_edges)
-        rng = np.random.default_rng([seed, int(round(strength * 1000)) & 0xFFFFFFFF, 3000])
-        print(f"\n=== SES selection strength {strength:+g}: {thin_name}, {counts[thin]} in the flow, "
-              f"{int((sample['origin'] == thin).sum())} in the Sprint 2 sample ===")
-        rows = run_crossover(flow, margins, sample, thin, sizes, replicates, tilt, rng, edges)
-        for r in rows:
-            r["ses_strength"] = strength
-        all_rows += rows
+        variables = margins.variables + ("edattain",)
+        truth = crosstab(flow, variables, dict(margins.levels, edattain=len(EDATTAIN_LABELS)))
         key = f"γ = {strength:+g}"
-        summaries[key] = summarize(rows)
-        sprint2_n[key] = int((sample["origin"] == thin).sum())
-        print(f"{'n':>6}{'pooled':>10}{'separate':>10}{'sep-pool':>10}{'sep wins':>10}{'sep fails':>11}")
-        for e in summaries[key]["by_size"]:
-            f = lambda x, s=".4f": "-" if x is None else f"{x:{s}}"  # noqa: E731
-            print(f"{e['n']:>6}{f(e['pooled']['median']):>10}{f(e['separate']['median']):>10}"
-                  f"{f(e['paired_median_diff'], '+.4f'):>10}{f(e['separate_wins_share'], '.2f'):>10}"
-                  f"{e['separate_failure_rate']:>11.2f}")
-        c = summaries[key]["crossover"]
-        print("Crossover: " + (f"n ≈ {c['n']:.0f}" if c["n"] else c["status"]))
+        for j, thin_name in enumerate(thin_names):
+            thin = origin_names.index(thin_name)
+            sizes = [n for n in ccfg.get("sizes", DEFAULT_SIZES) if n <= counts[thin]]
+            het = heterogeneity(truth, variables, thin, band_edges=edges)
+            # Same stream as the single-origin runs for the first origin, so earlier results reproduce.
+            rng = np.random.default_rng([seed, int(round(strength * 1000)) & 0xFFFFFFFF, 3000 + 1000 * j])
+            n_s2 = int((sample["origin"] == thin).sum())
+            print(f"\n=== SES selection strength {strength:+g}: {thin_name}, {counts[thin]} in the flow, "
+                  f"{n_s2} in the Sprint 2 sample; pooled-limit TVD {het['pooled_limit_tvd']:.3f}, "
+                  f"education TVD vs pool {het['tvd_edattain_vs_pool']:.3f} ===")
+            rows = run_crossover(flow, margins, sample, thin, sizes, replicates, tilt, rng, edges)
+            for r in rows:
+                r["ses_strength"] = strength
+                r["origin"] = thin_name
+            all_rows += rows
+            sprint2_n.setdefault(thin_name, {})[key] = n_s2
+            for metric in metrics:
+                summ = summarize(rows, metric)
+                summ["heterogeneity"] = het
+                summaries.setdefault(f"{thin_name}|{metric}", {})[key] = summ
+                c = summ["crossover"]
+                points.append({"origin": thin_name, "metric": metric, "ses_strength": strength,
+                               "crossover_n": c["n"], "status": c["status"], **het})
+                print(f"[{metric}]")
+                print(f"{'n':>6}{'pooled':>10}{'separate':>10}{'sep-pool':>10}{'sep wins':>10}{'sep fails':>11}")
+                for e in summ["by_size"]:
+                    f = lambda x, s=".4f": "-" if x is None else f"{x:{s}}"  # noqa: E731
+                    print(f"{e['n']:>6}{f(e['pooled']['median']):>10}{f(e['separate']['median']):>10}"
+                          f"{f(e['paired_median_diff'], '+.4f'):>10}{f(e['separate_wins_share'], '.2f'):>10}"
+                          f"{e['separate_failure_rate']:>11.2f}")
+                print(f"Crossover [{metric}]: " + (f"n ≈ {c['n']:.0f}" if c["n"] else c["status"]))
 
-    fields = ["ses_strength", "replicate", "n", "design", "failure", "srmse", "tvd_edattain", "univ_error",
-              "false_zeros", "true_cells", "empty_control_cells"]
+    fields = ["origin", "ses_strength", "replicate", "n", "design", "failure", "srmse", "tvd_edattain",
+              "univ_error", "false_zeros", "true_cells", "empty_control_cells"]
     with open(out / "crossover_runs.csv", "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=fields)
         w.writeheader()
         for r in all_rows:
             w.writerow({k: r.get(k) for k in fields})
-    result = {"thin_origin": thin_name, "drop_age_edges": drop_edges, "replicates": replicates, "sprint2_sample_n": sprint2_n,
-              "summaries": summaries}
+    pfields = ["origin", "metric", "ses_strength", "crossover_n", "status", "pooled_limit_tvd", "tvd_edattain_vs_pool"]
+    with open(out / "crossover_vs_heterogeneity.csv", "w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=pfields)
+        w.writeheader()
+        for p in points:
+            w.writerow({k: p.get(k) for k in pfields})
+    result = {"origins": thin_names, "metrics": metrics, "drop_age_edges": drop_edges, "replicates": replicates,
+              "sprint2_sample_n": sprint2_n, "summaries": summaries, "crossover_vs_heterogeneity": points}
     with open(out / "crossover_summary.json", "w") as f:
         json.dump(result, f, indent=2, ensure_ascii=False)
-    outputs = [out / "crossover_runs.csv", out / "crossover_summary.json"]
+    outputs = [out / "crossover_runs.csv", out / "crossover_vs_heterogeneity.csv", out / "crossover_summary.json"]
+
+    print("\nCrossover against heterogeneity (pooled-limit TVD):")
+    print(f"{'origin':>12}{'metric':>14}{'γ':>6}{'limit TVD':>11}{'edu TVD':>9}{'crossover':>28}")
+    for p in sorted(points, key=lambda p: (p["metric"], p["pooled_limit_tvd"])):
+        cn = f"{p['crossover_n']:.0f}" if p["crossover_n"] else p["status"]
+        print(f"{p['origin']:>12}{p['metric']:>14}{p['ses_strength']:>+6g}{p['pooled_limit_tvd']:>11.3f}"
+              f"{p['tvd_edattain_vs_pool']:>9.3f}{cn:>28}")
     try:
-        plot_crossover(summaries, out / "crossover.png", thin_name, sprint2_n)
-        outputs.append(out / "crossover.png")
-        print(f"\nPlot: {out / 'crossover.png'}")
+        for name, by_gamma in summaries.items():
+            origin, metric = name.split("|")
+            png = out / f"crossover_{origin}_{metric}.png"
+            plot_crossover(by_gamma, png, origin, sprint2_n[origin], metric)
+            outputs.append(png)
+        plot_heterogeneity(points, out / "crossover_vs_heterogeneity.png", metrics)
+        outputs.append(out / "crossover_vs_heterogeneity.png")
+        print(f"\nPlots in {out}")
     except ImportError:
-        print("\nmatplotlib is not installed; skipped the plot (pip install matplotlib).")
+        print("\nmatplotlib is not installed; skipped the plots.")
     log_run(
         cfg.get("run_log", "runs/run_log.jsonl"),
-        f"Sprint 3: pooled vs separate IPF crossover on {thin_name}",
-        {"thin_origin": thin_name, "drop_age_edges": drop_edges, "sizes": list(ccfg.get("sizes", DEFAULT_SIZES)), "replicates": replicates,
-         "tilt": tilt_cfg, "ses_strengths": list(cfg["flow"]["ses_strengths"])},
+        f"Pooled vs separate IPF crossover on {', '.join(thin_names)} ({', '.join(metrics)})",
+        {"origins": thin_names, "metrics": metrics, "drop_age_edges": drop_edges,
+         "sizes": list(ccfg.get("sizes", DEFAULT_SIZES)), "replicates": replicates, "tilt": tilt_cfg,
+         "ses_strengths": list(cfg["flow"]["ses_strengths"])},
         seed=seed,
         inputs=inputs,
         outputs=outputs,
-        results={k: s["crossover"] for k, s in summaries.items()},
+        results={"crossover_vs_heterogeneity": points},
     )
     return result
 
