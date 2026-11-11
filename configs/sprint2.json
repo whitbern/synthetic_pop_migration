@@ -39,5 +39,12 @@
     "size": 1369,
     "tilt": {"ses": 1.0, "minor": -1.0}
   },
-  "controls": [["origin"], ["origin", "male"], ["origin", "age_band"]]
+  "controls": [["origin"], ["origin", "male"], ["origin", "age_band"]],
+  "crossover": {
+    "_comment": "Fine run around the first-pass crossover (138-277): denser grid between 120 and 400, 200 replicates. Coarse first pass (default sizes, 50 replicates) is in data/sprint3/.",
+    "origin": "Cameroon",
+    "sizes": [40, 80, 120, 160, 200, 240, 280, 320, 400, 480, 640],
+    "replicates": 200,
+    "output_dir": "data/sprint3_fine"
+  }
 }
