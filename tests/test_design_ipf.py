@@ -22,7 +22,7 @@ from synthpop import marginal
 from synthpop.crossover import crossover_point, run_crossover, summarize
 from synthpop.design_ipf import coarsen_age_bands, fit_ipf_design
 from synthpop.margins import crosstab, manufacture_margins
-from synthpop.scoring import score_origin, srmse, tvd
+from synthpop.scoring import mutual_information, score_origin, srmse, tvd
 from synthpop.selection import DarienTargets, draw_survey_sample, realize_flow, select_flow, survey_sample_keys
 from synthpop.truth import subset
 
@@ -141,6 +141,30 @@ def test_scores_on_hand_made_tables():
     assert srmse([0, 0], [2, 2]) == pytest.approx(1.0)
     assert tvd([1, 0], [0, 1]) == 1.0
     assert tvd([2, 2], [1, 1]) == 0.0
+
+
+def test_mutual_information_on_hand_made_tables():
+    # Independent: product of margins.
+    assert mutual_information(np.outer([1, 3], [2, 2, 4]), 0, 1) == pytest.approx(0.0, abs=1e-12)
+    # Perfectly dependent 2x2 with uniform margins: log 2.
+    assert mutual_information(np.eye(2), 0, 1) == pytest.approx(np.log(2))
+    assert mutual_information(np.eye(2), 1, 0) == pytest.approx(np.log(2))
+    # Other axes are summed out first.
+    t = np.stack([np.eye(2), np.eye(2)], axis=1)  # axes (a, c, b)
+    assert mutual_information(t, 0, 2) == pytest.approx(np.log(2))
+
+
+def test_ipf_keeps_the_seeds_age_education_association(rich):
+    """Pooled and separate IPF carry the sample's education-by-age pattern; maximum entropy would not."""
+    flow, margins, sample, edges = rich
+    variables = margins.variables + ("edattain",)
+    truth = crosstab(flow, variables, dict(margins.levels, edattain=5))
+    for variant in ("pooled", "separate"):
+        d = fit_ipf_design(margins, sample, variant, age_edges=edges)
+        for c in range(len(ORIGINS)):
+            s = score_origin(d.table, truth, variables, c, band_edges=edges)
+            assert s["mi_edattain_age_truth"] > 1e-4
+            assert s["mi_edattain_age"] > 1e-4  # maximum entropy gives ~0 here
 
 
 def test_draw_survey_sample_is_the_smallest_keys():

@@ -326,6 +326,12 @@ def run(cfg: Mapping) -> list[dict]:
         print("Adult university share error (synthetic - truth):")
         for label, scores in scored.items():
             print(f"{label:20}" + "".join(f"{_fmt(scores[n]['univ_error'], '+.4f'):>13}" for n in origin_names))
+        first = next(iter(scored.values()))
+        for key, what in (("mi_edattain_age", "age band"), ("mi_edattain_sex", "sex")):
+            print(f"Adult MI(education; {what}) within origin, nats (maximum entropy predicts 0):")
+            print(f"{'flow (truth)':20}" + "".join(f"{_fmt(first[n][key + '_truth']):>13}" for n in origin_names))
+            for label, scores in scored.items():
+                print(f"{label:20}" + "".join(f"{_fmt(scores[n][key]):>13}" for n in origin_names))
     return reports
 
 
