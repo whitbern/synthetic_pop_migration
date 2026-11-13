@@ -22,6 +22,11 @@ EDATTAIN):
 * ``false_zeros``: adult cells that are zero in the synthetic table but
   positive in the truth (Auld, Mohammadian & Wies 2009). IPF cannot fill
   them: a zero in the seed stays zero.
+* ``mi_edattain_age`` and ``mi_edattain_sex``: mutual information (nats)
+  between adult education and age band, or sex, within the origin group; the
+  ``..._truth`` keys give the same quantity in the truth. These measure how
+  much of the planted attribute's association with the controls a design
+  keeps. Maximum entropy predicts zero (Sprint 4's independence baseline).
 """
 
 from __future__ import annotations
@@ -32,7 +37,8 @@ import numpy as np
 
 from synthpop.truth import AGE_BANDS
 
-__all__ = ["ADULT_AGE", "adult_bands", "heterogeneity", "score_origin", "score_table", "srmse", "tvd"]
+__all__ = ["ADULT_AGE", "adult_bands", "heterogeneity", "mutual_information", "score_origin", "score_table", "srmse",
+           "tvd"]
 
 ADULT_AGE = 18
 
@@ -59,6 +65,22 @@ def tvd(p: np.ndarray, q: np.ndarray) -> float:
     return float(0.5 * np.abs(p / p.sum() - q / q.sum()).sum())
 
 
+def mutual_information(table: np.ndarray, a: int, b: int) -> float:
+    """I(A; B) in nats between axes ``a`` and ``b`` of a table of counts (other axes summed out)."""
+    t = np.asarray(table, dtype=float)
+    t = t.sum(axis=tuple(x for x in range(t.ndim) if x not in (a, b)))
+    if a > b:
+        t = t.T
+    total = t.sum()
+    if not np.isfinite(total) or total <= 0:
+        return float("nan")
+    p = t / total
+    pa, pb = p.sum(axis=1, keepdims=True), p.sum(axis=0, keepdims=True)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        terms = np.where(p > 0, p * np.log(p / (pa * pb)), 0.0)
+    return float(max(terms.sum(), 0.0))
+
+
 def score_origin(estimate: np.ndarray, truth: np.ndarray, variables: Sequence[str], origin: int,
                  attribute: str = "edattain", top_level: int = 4,
                  band_edges: Sequence[int] = AGE_BANDS) -> dict:
@@ -68,9 +90,13 @@ def score_origin(estimate: np.ndarray, truth: np.ndarray, variables: Sequence[st
     adults = adult_bands(band_edges)
     est = np.take(np.take(np.asarray(estimate, dtype=float), [origin], axis=o), adults, axis=a)
     tru = np.take(np.take(np.asarray(truth, dtype=float), [origin], axis=o), adults, axis=a)
+    m = variables.index("male") if "male" in variables else None
+    mi_truth = {"mi_edattain_age_truth": mutual_information(tru, e, a),
+                "mi_edattain_sex_truth": mutual_information(tru, e, m) if m is not None else None}
     if not np.all(np.isfinite(est)):
         return {"srmse": None, "tvd_edattain": None, "univ_error": None, "false_zeros": None,
-                "true_cells": int((tru > 0).sum())}
+                "true_cells": int((tru > 0).sum()), "mi_edattain_age": None, "mi_edattain_sex": None,
+                **mi_truth}
     others = tuple(x for x in range(est.ndim) if x != e)
     pe, qe = est.sum(axis=others), tru.sum(axis=others)
     return {
@@ -79,6 +105,9 @@ def score_origin(estimate: np.ndarray, truth: np.ndarray, variables: Sequence[st
         "univ_error": float(pe[top_level] / pe.sum() - qe[top_level] / qe.sum()) if pe.sum() and qe.sum() else None,
         "false_zeros": int(((est == 0) & (tru > 0)).sum()),
         "true_cells": int((tru > 0).sum()),
+        "mi_edattain_age": mutual_information(est, e, a),
+        "mi_edattain_sex": mutual_information(est, e, m) if m is not None else None,
+        **mi_truth,
     }
 
 
