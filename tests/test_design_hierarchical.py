@@ -130,7 +130,7 @@ def test_eb_origin_fits_and_falls_back_when_uninformative(thin):
     assert len(krec["per_origin"]) == len(krec["kappas"]) == margins.levels["origin"]
     for p, kap in zip(krec["per_origin"], krec["kappas"]):
         assert p["kappa"] == kap
-        assert p["fallback"] == (p["informative_cells"] == 0)
+        assert p["fallback"] == (p["informative_cells"] < krec["min_informative_cells"])
         if p["fallback"]:
             assert kap == krec["kappa"]
     ctrl = h.table.sum(axis=-1)
@@ -151,3 +151,15 @@ def test_unknown_kappa_string_rejected(rich):
     _, margins, sample, _ = rich
     with pytest.raises(ValueError):
         fit_hierarchical_design(margins, sample, "bayes")
+
+
+def test_origin_below_cell_threshold_uses_shared_kappa(thin):
+    _, margins, sample, _ = thin
+    _, loose = fit_hierarchical_design(margins, sample, "eb_origin", min_informative_cells=1)
+    cells = [p["informative_cells"] for p in loose["per_origin"]]
+    threshold = max(cells)  # only the best-covered origin(s) keep their own kappa
+    _, strict = fit_hierarchical_design(margins, sample, "eb_origin", min_informative_cells=threshold)
+    for c, p, kap in zip(cells, strict["per_origin"], strict["kappas"]):
+        assert p["fallback"] == (c < threshold)
+        if p["fallback"]:
+            assert kap == strict["kappa"]
