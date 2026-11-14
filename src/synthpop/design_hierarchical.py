@@ -28,9 +28,13 @@ all origins). With ``hierarchical.kappa = "eb_origin"`` each origin gets its
 own ``kappa_o``, estimated from that origin's counts alone: a shared ``kappa``
 is dominated by the largest origin, which is most of the pool and so always
 looks like it, and that drives ``kappa`` to pooling even when the thin origins
-differ. An origin with no cell holding two or more people carries no
-information about ``kappa`` (a cell of 0 or 1 contributes a constant), so it
-falls back to the shared estimate, and the report says so.
+differ. Only cells holding two or more people carry information about
+``kappa`` (a cell of 0 or 1 contributes a constant), so an origin with fewer
+than ``hierarchical.min_informative_cells`` such cells (default
+``MIN_INFORMATIVE_CELLS``) falls back to the shared estimate, and the report
+says so. On the ACS run, Cameroon with one informative cell got
+``kappa_o = 0.01`` (effectively separate) and an SRMSE of 3.2; a reported
+threshold of a few cells avoids estimating from noise.
 ``kappa`` can also be fixed in the config (``hierarchical.kappa``), and
 ``hierarchical.kappa_sweep`` adds a list of fixed values for a sensitivity
 check against the planted truth.
@@ -60,10 +64,11 @@ from synthpop.runlog import log_run
 from synthpop.scoring import score_table
 from synthpop.truth import AGE_BANDS, EDATTAIN_LABELS, Records, load_frozen_truth
 
-__all__ = ["KAPPA_BOUNDS", "estimate_kappa", "fit_hierarchical_design", "hierarchical_seed", "informative_cells",
-           "log_marginal_likelihood"]
+__all__ = ["KAPPA_BOUNDS", "MIN_INFORMATIVE_CELLS", "estimate_kappa", "fit_hierarchical_design", "hierarchical_seed",
+           "informative_cells", "log_marginal_likelihood"]
 
 KAPPA_BOUNDS: tuple[float, float] = (1e-2, 1e6)
+MIN_INFORMATIVE_CELLS = 5
 _lgamma = np.vectorize(math.lgamma, otypes=[float])
 
 
@@ -166,11 +171,13 @@ def estimate_kappa(raw: np.ndarray, o: int, bounds: tuple[float, float] = KAPPA_
 def fit_hierarchical_design(margins: Margins, sample: Records, kappa: float | str = "eb",
                             attribute: str = "edattain", n_levels: int = len(EDATTAIN_LABELS), *,
                             age_edges: Sequence[int] = AGE_BANDS, tol: float = 1e-10,
-                            max_iter: int = 1000) -> tuple[IPFDesign, dict]:
+                            max_iter: int = 1000,
+                            min_informative_cells: int = MIN_INFORMATIVE_CELLS) -> tuple[IPFDesign, dict]:
     """Fit the hierarchical design.
 
     ``kappa="eb"`` estimates one shared kappa, ``"eb_origin"`` one per origin
-    (falling back to the shared one where an origin is uninformative), and a
+    (falling back to the shared one for an origin with fewer than
+    ``min_informative_cells`` cells of two or more people), and a
     number fixes it. Returns the design (``variant="hierarchical"``) and the
     kappa record, whose ``"kappas"`` lists the value each origin used.
     """
@@ -184,12 +191,13 @@ def fit_hierarchical_design(margins: Margins, sample: Records, kappa: float | st
         per = []
         for k in range(n_origins):
             cells = informative_cells(raw, o, k)
-            if cells:
+            if cells >= max(1, int(min_informative_cells)):
                 per.append(dict(estimate_kappa(raw, o, origin=k), informative_cells=cells, fallback=False))
             else:
                 per.append({"kappa": krec["kappa"], "log_ml": None, "at_bound": krec["at_bound"],
-                            "informative_cells": 0, "fallback": True})
+                            "informative_cells": cells, "fallback": True})
         krec["per_origin"] = per
+        krec["min_informative_cells"] = int(min_informative_cells)
     elif isinstance(kappa, str):
         raise ValueError(f"unknown kappa {kappa!r}; expected 'eb', 'eb_origin' or a number")
     else:
@@ -243,6 +251,7 @@ def run(cfg: Mapping) -> list[dict]:
     """Fit the hierarchical design at every SES strength in the config and score it."""
     hcfg = dict(cfg.get("hierarchical", {}))
     kappa = hcfg.get("kappa", "eb")
+    min_cells = int(hcfg.get("min_informative_cells", MIN_INFORMATIVE_CELLS))
     sweep = [float(k) for k in hcfg.get("kappa_sweep", [])]
     draw = bool(hcfg.get("population", True))
     drop_edges = [int(e) for e in hcfg.get("drop_age_edges", cfg.get("ipf", {}).get("drop_age_edges", []))]
@@ -264,13 +273,14 @@ def run(cfg: Mapping) -> list[dict]:
         levels = dict(margins.levels, edattain=len(EDATTAIN_LABELS))
         truth_table = crosstab(flow, variables, levels)
 
-        design, krec = fit_hierarchical_design(margins, sample, kappa, age_edges=edges)
+        design, krec = fit_hierarchical_design(margins, sample, kappa, age_edges=edges,
+                                               min_informative_cells=min_cells)
         bound = {"lower": " (at lower bound: close to separate)",
                  "upper": " (at upper bound: close to pooled)"}.get(krec["at_bound"], "")
         print(f"kappa ({'shared ' if 'per_origin' in krec else ''}{krec['method'].split(',')[0]}) = "
               f"{krec['kappa']:.4g}{bound}")
         for name, p in zip(origin_names, krec.get("per_origin", [])):
-            note = (" (no cell with 2+ people: shared value used)" if p["fallback"] else
+            note = (f" (fewer than {min_cells} informative cells: shared value used)" if p["fallback"] else
                     {"lower": " (lower bound: separate)", "upper": " (upper bound: pooled)"}.get(p["at_bound"], ""))
             print(f"  kappa_o {name:12} = {p['kappa']:.4g}{note}  [{p['informative_cells']} informative cells]")
         scores = score_table(design.table, truth_table, variables, origin_names, edges)
@@ -312,7 +322,7 @@ def run(cfg: Mapping) -> list[dict]:
             cfg.get("run_log", "runs/run_log.jsonl"),
             f"Hierarchical IPF design at SES strength {strength:+g}",
             {"variant": "hierarchical", "ses_strength": strength, "kappa": kappa, "kappa_sweep": sweep,
-             "drop_age_edges": drop_edges, "tol": 1e-10, "max_iter": 1000},
+             "min_informative_cells": min_cells, "drop_age_edges": drop_edges, "tol": 1e-10, "max_iter": 1000},
             seed=seed,
             inputs=[d / "margins.json", d / "sample.csv.gz", d / "flow.csv.gz"],
             outputs=outputs,
