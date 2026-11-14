@@ -24,7 +24,14 @@ no margin, so IPF keeps each cell's shrunken education distribution.
 ``kappa -> infinity`` is the pooled one. By default it is estimated by
 empirical Bayes, maximizing the Dirichlet-multinomial marginal likelihood of
 the origins' cell counts given the pooled distributions (one ``kappa`` for
-all origins). It can be fixed in the config (``hierarchical.kappa``), and
+all origins). With ``hierarchical.kappa = "eb_origin"`` each origin gets its
+own ``kappa_o``, estimated from that origin's counts alone: a shared ``kappa``
+is dominated by the largest origin, which is most of the pool and so always
+looks like it, and that drives ``kappa`` to pooling even when the thin origins
+differ. An origin with no cell holding two or more people carries no
+information about ``kappa`` (a cell of 0 or 1 contributes a constant), so it
+falls back to the shared estimate, and the report says so.
+``kappa`` can also be fixed in the config (``hierarchical.kappa``), and
 ``hierarchical.kappa_sweep`` adds a list of fixed values for a sensitivity
 check against the planted truth.
 
@@ -53,7 +60,8 @@ from synthpop.runlog import log_run
 from synthpop.scoring import score_table
 from synthpop.truth import AGE_BANDS, EDATTAIN_LABELS, Records, load_frozen_truth
 
-__all__ = ["KAPPA_BOUNDS", "estimate_kappa", "fit_hierarchical_design", "hierarchical_seed", "log_marginal_likelihood"]
+__all__ = ["KAPPA_BOUNDS", "estimate_kappa", "fit_hierarchical_design", "hierarchical_seed", "informative_cells",
+           "log_marginal_likelihood"]
 
 KAPPA_BOUNDS: tuple[float, float] = (1e-2, 1e6)
 _lgamma = np.vectorize(math.lgamma, otypes=[float])
@@ -75,17 +83,19 @@ def _pooled(x: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     return q, w
 
 
-def hierarchical_seed(raw: np.ndarray, o: int, kappa: float) -> np.ndarray:
+def hierarchical_seed(raw: np.ndarray, o: int, kappa: float | Sequence[float]) -> np.ndarray:
     """Shrink every origin's slice of ``raw`` toward the pooled slice by ``kappa`` pseudo-counts.
 
     ``raw`` is the separate seed (counts over controls x attribute, attribute
-    last, origin on axis ``o``). ``kappa = 0`` returns ``raw`` unchanged.
+    last, origin on axis ``o``). ``kappa`` is one value or one per origin.
+    ``kappa = 0`` returns ``raw`` unchanged.
     """
-    if not kappa >= 0:
-        raise ValueError(f"kappa must be nonnegative, got {kappa}")
-    if not np.isfinite(kappa):
-        raise ValueError("kappa must be finite; use the pooled IPF design for kappa = infinity")
     x = _origin_first(raw, o)
+    kappa = np.broadcast_to(np.asarray(kappa, dtype=float), (x.shape[0],))[:, None, None]
+    if not np.all(kappa >= 0):
+        raise ValueError(f"kappa must be nonnegative, got {kappa.ravel().tolist()}")
+    if not np.all(np.isfinite(kappa)):
+        raise ValueError("kappa must be finite; use the pooled IPF design for kappa = infinity")
     q, w = _pooled(x)
     n = x.sum(axis=-1, keepdims=True)  # x_oc
     with np.errstate(invalid="ignore", divide="ignore"):
@@ -95,13 +105,17 @@ def hierarchical_seed(raw: np.ndarray, o: int, kappa: float) -> np.ndarray:
     return np.moveaxis(seed.reshape(shape), 0, o)
 
 
-def log_marginal_likelihood(raw: np.ndarray, o: int, kappa: float) -> float:
+def log_marginal_likelihood(raw: np.ndarray, o: int, kappa: float, origin: int | None = None) -> float:
     """Dirichlet-multinomial log marginal likelihood of each origin's cell counts, prior ``Dir(kappa q_c)``.
 
-    Constants that do not involve ``kappa`` are dropped.
+    ``q`` is always the pooled distribution over every origin; ``origin``
+    restricts the sum to that origin's cells. Constants that do not involve
+    ``kappa`` are dropped.
     """
     x = _origin_first(raw, o)
     q, _ = _pooled(x)
+    if origin is not None:
+        x = x[origin:origin + 1]
     n = x.sum(axis=-1)  # (origin, cell)
     ll = float(np.sum(np.where(n > 0, math.lgamma(kappa) - _lgamma(kappa + n), 0.0)))
     a = kappa * np.broadcast_to(q, x.shape)
@@ -110,17 +124,24 @@ def log_marginal_likelihood(raw: np.ndarray, o: int, kappa: float) -> float:
     return ll
 
 
-def estimate_kappa(raw: np.ndarray, o: int, bounds: tuple[float, float] = KAPPA_BOUNDS) -> dict:
+def informative_cells(raw: np.ndarray, o: int, origin: int) -> int:
+    """Cells of ``origin`` holding at least two people: the only ones that carry information about kappa."""
+    return int(np.sum(_origin_first(raw, o)[origin].sum(axis=-1) >= 2))
+
+
+def estimate_kappa(raw: np.ndarray, o: int, bounds: tuple[float, float] = KAPPA_BOUNDS,
+                   origin: int | None = None) -> dict:
     """Empirical-Bayes ``kappa``: maximize :func:`log_marginal_likelihood` over ``log kappa``.
 
     A log grid locates the maximum, golden-section search refines it. Returns
     ``{"kappa", "log_ml", "at_bound"}``, where ``at_bound`` is ``"lower"``
     (the origins look unrelated: close to separate), ``"upper"`` (they look
-    identical: close to pooled) or ``None``.
+    identical: close to pooled) or ``None``. ``origin`` estimates that
+    origin's own kappa from its counts alone.
     """
     lo, hi = math.log(bounds[0]), math.log(bounds[1])
     grid = np.linspace(lo, hi, 81)
-    f = lambda t: log_marginal_likelihood(raw, o, math.exp(t))  # noqa: E731
+    f = lambda t: log_marginal_likelihood(raw, o, math.exp(t), origin)  # noqa: E731
     vals = np.array([f(t) for t in grid])
     i = int(np.argmax(vals))
     if i in (0, len(grid) - 1):
@@ -146,21 +167,40 @@ def fit_hierarchical_design(margins: Margins, sample: Records, kappa: float | st
                             attribute: str = "edattain", n_levels: int = len(EDATTAIN_LABELS), *,
                             age_edges: Sequence[int] = AGE_BANDS, tol: float = 1e-10,
                             max_iter: int = 1000) -> tuple[IPFDesign, dict]:
-    """Fit the hierarchical design. ``kappa="eb"`` estimates it; a number fixes it.
+    """Fit the hierarchical design.
 
-    Returns the design (``variant="hierarchical"``) and the kappa record.
+    ``kappa="eb"`` estimates one shared kappa, ``"eb_origin"`` one per origin
+    (falling back to the shared one where an origin is uninformative), and a
+    number fixes it. Returns the design (``variant="hierarchical"``) and the
+    kappa record, whose ``"kappas"`` lists the value each origin used.
     """
     variables, levels, raw = ipf_seed(sample, margins, "separate", attribute, n_levels)
     o = variables.index("origin")
+    n_origins = levels["origin"]
     if kappa == "eb":
         krec = dict(estimate_kappa(raw, o), method="empirical Bayes")
+    elif kappa == "eb_origin":
+        krec = dict(estimate_kappa(raw, o), method="empirical Bayes, per origin")
+        per = []
+        for k in range(n_origins):
+            cells = informative_cells(raw, o, k)
+            if cells:
+                per.append(dict(estimate_kappa(raw, o, origin=k), informative_cells=cells, fallback=False))
+            else:
+                per.append({"kappa": krec["kappa"], "log_ml": None, "at_bound": krec["at_bound"],
+                            "informative_cells": 0, "fallback": True})
+        krec["per_origin"] = per
+    elif isinstance(kappa, str):
+        raise ValueError(f"unknown kappa {kappa!r}; expected 'eb', 'eb_origin' or a number")
     else:
         kappa = float(kappa)
         if not kappa >= 0:
             raise ValueError(f"kappa must be nonnegative, got {kappa}")
         krec = {"kappa": kappa, "log_ml": log_marginal_likelihood(raw, o, kappa) if kappa > 0 else None,
                 "at_bound": None, "method": "fixed"}
-    seed = hierarchical_seed(raw, o, krec["kappa"])
+    krec["kappas"] = ([p["kappa"] for p in krec["per_origin"]] if "per_origin" in krec
+                      else [krec["kappa"]] * n_origins)
+    seed = hierarchical_seed(raw, o, krec["kappas"])
     n_seed = crosstab(sample, ["origin"], levels)
     table = np.full(seed.shape, np.nan)
     sub_vars = tuple(v for v in variables if v != "origin")
@@ -227,7 +267,12 @@ def run(cfg: Mapping) -> list[dict]:
         design, krec = fit_hierarchical_design(margins, sample, kappa, age_edges=edges)
         bound = {"lower": " (at lower bound: close to separate)",
                  "upper": " (at upper bound: close to pooled)"}.get(krec["at_bound"], "")
-        print(f"kappa ({krec['method']}) = {krec['kappa']:.4g}{bound}")
+        print(f"kappa ({'shared ' if 'per_origin' in krec else ''}{krec['method'].split(',')[0]}) = "
+              f"{krec['kappa']:.4g}{bound}")
+        for name, p in zip(origin_names, krec.get("per_origin", [])):
+            note = (" (no cell with 2+ people: shared value used)" if p["fallback"] else
+                    {"lower": " (lower bound: separate)", "upper": " (upper bound: pooled)"}.get(p["at_bound"], ""))
+            print(f"  kappa_o {name:12} = {p['kappa']:.4g}{note}  [{p['informative_cells']} informative cells]")
         scores = score_table(design.table, truth_table, variables, origin_names, edges)
         groups = [dict(g, origin=origin_names[g["origin"]]) for g in design.groups]
         for g in groups:
@@ -251,7 +296,7 @@ def run(cfg: Mapping) -> list[dict]:
             table_list[g] = None  # origin is axis 0
         with open(out / "table.json", "w") as f:
             json.dump({"variables": list(design.variables), "levels": design.levels, "table": table_list,
-                       "kappa": krec["kappa"], "failed_origins": [origin_names[g] for g in design.failed]}, f)
+                       "kappa": krec["kappas"], "failed_origins": [origin_names[g] for g in design.failed]}, f)
         if draw and len(design.failed) < len(origin_names):
             rng = np.random.default_rng([seed, int(round(strength * 1000)) & 0xFFFFFFFF, 3000])
             people = draw_population(np.nan_to_num(design.table, nan=0.0), rng)
@@ -271,7 +316,7 @@ def run(cfg: Mapping) -> list[dict]:
             seed=seed,
             inputs=[d / "margins.json", d / "sample.csv.gz", d / "flow.csv.gz"],
             outputs=outputs,
-            results={"kappa": krec["kappa"], "failed_origins": report["failed_origins"],
+            results={"kappa": krec["kappas"], "failed_origins": report["failed_origins"],
                      "srmse": {n: s["srmse"] for n, s in scores.items()}},
         )
         reports.append(report)
@@ -288,7 +333,13 @@ def run(cfg: Mapping) -> list[dict]:
                     if tuple(t["variables"]) == variables:
                         scored[mdir.name.replace("_", " ")] = score_table(np.asarray(t["table"]), truth_table,
                                                                         variables, origin_names)
-        scored[f"hierarchical k={krec['kappa']:.3g}"] = scores
+        if "per_origin" in krec:
+            shared, _ = fit_hierarchical_design(margins, sample, krec["kappa"], age_edges=edges)
+            scored[f"hierarchical k={krec['kappa']:.3g}"] = score_table(shared.table, truth_table, variables,
+                                                                       origin_names, edges)
+            scored["hierarchical k_o"] = scores
+        else:
+            scored[f"hierarchical k={krec['kappa']:.3g}"] = scores
         _print_scores(scored, origin_names)
         if sweep_scores:
             print("Kappa sweep, adult SRMSE (0 = separate; large = pooled):")

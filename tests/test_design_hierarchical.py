@@ -12,7 +12,7 @@ import pytest
 
 from test_design_ipf import _edu_given_cell, _inputs, rich, thin  # noqa: F401  (fixtures)
 from synthpop import marginal
-from synthpop.design_hierarchical import (estimate_kappa, fit_hierarchical_design, hierarchical_seed,
+from synthpop.design_hierarchical import (estimate_kappa, fit_hierarchical_design, hierarchical_seed, informative_cells,
                                           log_marginal_likelihood)
 from synthpop.design_ipf import fit_ipf_design, ipf_seed
 
@@ -94,3 +94,60 @@ def test_negative_kappa_rejected(rich):
     _, margins, sample, _ = rich
     with pytest.raises(ValueError):
         fit_hierarchical_design(margins, sample, -1.0)
+
+
+def _dominated_counts(rng, cells=12, levels=4, sizes=(1100, 90, 50, 90)):
+    """One origin is most of the pool; the thin ones follow their own pattern."""
+    base = rng.dirichlet(np.full(levels, 2.0), size=cells)
+    x = np.zeros((len(sizes), cells, levels))
+    for k, n in enumerate(sizes):
+        probs = base if k == 0 else rng.dirichlet(np.ones(levels), size=cells)
+        for c in range(cells):
+            x[k, c] = rng.multinomial(n // cells, probs[c])
+    return x
+
+
+def test_shared_kappa_is_swamped_but_per_origin_is_not():
+    x = _dominated_counts(np.random.default_rng(1))
+    assert estimate_kappa(x, 0)["at_bound"] == "upper"
+    assert estimate_kappa(x, 0, origin=0)["kappa"] > 1e4
+    for k in (1, 2, 3):
+        assert estimate_kappa(x, 0, origin=k)["kappa"] < 100
+
+
+def test_per_origin_kappas_in_the_seed():
+    x = _dominated_counts(np.random.default_rng(2))
+    kappas = [1e3, 5.0, 0.0, 50.0]
+    seed = hierarchical_seed(x, 0, kappas)
+    for k, kap in enumerate(kappas):
+        np.testing.assert_allclose(seed[k], hierarchical_seed(x, 0, kap)[k])
+
+
+def test_eb_origin_fits_and_falls_back_when_uninformative(thin):
+    _, margins, sample, _ = thin
+    h, krec = fit_hierarchical_design(margins, sample, "eb_origin")
+    assert not h.failed
+    assert len(krec["per_origin"]) == len(krec["kappas"]) == margins.levels["origin"]
+    for p, kap in zip(krec["per_origin"], krec["kappas"]):
+        assert p["kappa"] == kap
+        assert p["fallback"] == (p["informative_cells"] == 0)
+        if p["fallback"]:
+            assert kap == krec["kappa"]
+    ctrl = h.table.sum(axis=-1)
+    for axes, target in margins.margins:
+        np.testing.assert_allclose(marginal(ctrl, axes), target, rtol=1e-8, atol=1e-6)
+
+
+def test_uninformative_origin_has_flat_likelihood():
+    x = np.zeros((2, 6, 3))
+    x[0] = 20
+    x[1, :3, 0] = 1  # three cells with one person each, the rest empty
+    assert informative_cells(x, 0, 1) == 0
+    vals = [log_marginal_likelihood(x, 0, k, origin=1) for k in (0.1, 10.0, 1e4)]
+    np.testing.assert_allclose(vals, vals[0])
+
+
+def test_unknown_kappa_string_rejected(rich):
+    _, margins, sample, _ = rich
+    with pytest.raises(ValueError):
+        fit_hierarchical_design(margins, sample, "bayes")
