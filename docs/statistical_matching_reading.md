@@ -153,10 +153,22 @@ papers checked do not frame the core synthesis step as matching:
   That is the non-identification, stated, and resolved by a homogeneity
   assumption, without the matching vocabulary. See *Beckman et al. as a
   precedent* below for what this means for us.
-- Guo and Bhat (2007) and Ye et al. (2009) were **not** checked in full text
-  (paywalled). The claim "the synthesis-method literature does not cite
-  matching" needs that check before it goes in the paper; until then write
-  "the synthesis reviews and papers we examined".
+- Guo and Bhat [@guo_bhat2007] and Ye et al. [@ye2009] (checked 2026-11-15
+  against full texts: the Guo–Bhat author manuscript and the Ye et al. TRB
+  2009 conference paper; page numbers are those documents' own) also **cite
+  no matching or data-fusion work** (reference lists: Guo–Bhat pp. 20–21,
+  Ye et al. pp. 18–19). Both frame their contribution as extending Beckman
+  et al. to control person-level as well as household-level margins
+  (Guo–Bhat pp. 1, 7–8; Ye et al. pp. 4–5), not as anything about the
+  uncontrolled attributes. Guo and Bhat describe the IPF step as one that
+  "preserves the correlation structure observed in the sample households"
+  of the seed area (p. 4), i.e. the Beckman assumption restated as a
+  property of the algorithm rather than an assumption; Ye et al. do not
+  discuss it.
+- With these three in full text and Chapuis et al. partially, the claim can
+  now be made for **the founding synthesis-method papers we examined**
+  (Beckman, Guo–Bhat, Ye) and the review: none cites matching. Keep the
+  scope qualifier; it is not a census of the field.
 
 Where the literatures do touch is applied pipelines that use matching as a
 **separate attribute-attachment step after synthesis**: Namazi-Rad et al.
@@ -227,6 +239,38 @@ What the full text shows, with report page numbers:
   size × vehicles joint; "not recommended" (pp. 16–17). This is the
   independence baseline our maximum-entropy designs sit close to.
 
+### What the two follow-ups add (Guo and Bhat 2007; Ye et al. 2009)
+
+- **Zero cells, two answers.** Guo and Bhat treat cells empty in the seed
+  but present in the margins ("incorrect zero cell values", p. 7) by capping
+  IPF iterations, coarsening categories, or reporting where they occur
+  (pp. 7, 9). In Dallas–Fort Worth, 388 of 3,372 block groups failed at
+  household level and 151 at person level, all from small groups absent from
+  the PUMA sample (p. 14). Their validation then **drops** those block groups
+  and evaluates 62 Tarrant County block groups without the problem (p. 16):
+  the same survivor bias we flag for separate IPF. Ye et al. instead
+  **borrow** the zero cells' probabilities from the region-wide PUMS, capped
+  at 1 / (households in the PUMA) because the zero itself is evidence the
+  group is rare locally, and rescale the non-zero cells to sum to one
+  (pp. 11–12). That is pooled borrowing for empty cells only, with an ad hoc
+  cap in place of our κ: the closest precedent for the hierarchical design
+  (which shrinks every cell, not just the empty ones, and estimates the
+  amount by empirical Bayes).
+- **Validation is against the fitted targets, not a truth.** Guo and Bhat
+  score the synthetic population against the IPF-estimated tables (pp.
+  16–19); Ye et al. against the "observed IPF-generated" person table with
+  a χ² test that omits zero cells (pp. 14–16). Neither can see an error in
+  the uncontrolled association, because the reference is itself the CIA
+  point. Beckman et al.'s pseudo-tract design remains the only planted-truth
+  check among the three.
+- **Both misreport Beckman on zero cells.** Ye et al. write that Beckman et
+  al. "recommended adding an arbitrarily small value (e.g., 0.01) to zero
+  cells" (p. 11); Beckman et al. say tweaking "badly biases" the margins and
+  "is not recommended" (Beckman p. 16). Guo and Bhat say Beckman compared
+  tweaking against a maximum-iteration approach (p. 7); Beckman compared it
+  against the untweaked basic algorithm (Beckman pp. 15–16). Cite Beckman
+  directly on this point.
+
 How to use it in the paper: cite Beckman et al. as the origin of the
 assumption we test (same seed odds ratios for every subgroup sharing a seed),
 and as the first planted-truth check of it. Our contribution relative to them
@@ -290,7 +334,11 @@ worth reading for the γ (selection) component in its own right
 > ratios, and justify it as necessary for tractability [@beckman1996]; the
 > reviews describe it as a property of independent sampling
 > [@chapuis2022]; neither connects it to the matching results on what it
-> costs or how to bound it. We make that connection: each design we compare
+> costs or how to bound it. Later methods kept this structure, adding
+> person-level controls and handling empty seed cells by coarsening,
+> dropping or borrowing regional probabilities [@guo_bhat2007; @ye2009],
+> and validated against the fitted tables rather than a known truth. We make
+> that connection: each design we compare
 > corresponds to a different conditional independence, and the planted truth
 > lets us measure what each costs for subgroups that differ from the pool,
 > the case Beckman et al. observed in three heterogeneous pseudo-tracts and
@@ -315,6 +363,8 @@ worth reading for the γ (selection) component in its own right
 | marella_pfeffermann_nr | Southampton ePrints PDF | Title and authors only; **venue and year not confirmed**, find before citing |
 | chapuis2022 | JASSS page | 25(2):6, DOI 10.18564/jasss.4762 |
 | beckman1996 | Full text of the Los Alamos TRANSIMS/TMIP report version (uploaded scan, 19 pp. + tables/figures); journal citation from RePEc | TR-A 30(6):415–429. Page numbers cited in this note are the **report's**; map to journal pages before quoting. DOI 10.1016/0965-8564(96)00004-3 not confirmed (Crossref blocked here) |
+| guo_bhat2007 | Full text of author manuscript (uploaded); journal citation from Ye et al.'s reference list and repository/index titles | TRR 2014:92–101. Page numbers in this note are the manuscript's. DOI 10.3141/2014-12 not confirmed |
+| ye2009 | Full text of the TRB 88th Annual Meeting paper (uploaded, "submitted for presentation only"); TRID record 881554 | Conference paper, not peer-reviewed journal; Xin Ye (not Peijun Ye). Paper number not confirmed |
 | little_wu1991 | Title from library catalogue; volume and pages from Beckman et al.'s reference list | JASA 86:87–95; Beckman's list says "known marginals", the published title says "known margins"; issue/DOI not confirmed |
 | yameogo2021 | JASSS page | 24(2):5, DOI 10.18564/jasss.4482 |
 | namazirad2017 | UOW repository | CEUS 63:3–14; DOI not shown |
