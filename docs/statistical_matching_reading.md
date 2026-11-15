@@ -131,11 +131,17 @@ Page numbers are approximate (taken from running heads in the paste);
   for the uncertainty-set idea. The last quotation is the one-line summary
   of Paper 1: our planted truth measures how far each design's output
   reflects its assumption rather than the truth.
-- **Still unconfirmed:** Singh et al. (1993). Allison reports the book cites
-  it in connection with hot-deck methods; our Q1 description (auxiliary
-  information reduces the error) was not checked against that passage and is
-  now marked as such. Fréchet bounds and logical constraints remain cited to
-  [@dorazio2006jos] and [@conti2012], which were read in full.
+- **Singh et al. (1993), as the book uses it** (from passages Allison
+  reported 2026-11-15; Singh itself not read). The book cites it for hot
+  deck, the loglinear step, mean matching, RAKEYZ (raking with an auxiliary
+  (Y, Z) table), categorical methods and the choice of matching variables.
+  In the Bayesian chapter (pp. 94–95, **Allison to confirm**): "There is an
+  interesting finding in Singh et al. (1993) and Filippello et al. (2004).
+  They state that estimators perform better by using only information
+  concerning (Y, Z) also when auxiliary information is available at micro
+  level on all the variables (X, Y, Z)". See *Positioning*, item 3, for what
+  this means for our designs. Fréchet bounds and logical constraints remain
+  cited to [@dorazio2006jos] and [@conti2012], which were read in full.
 
 ## Q1. Has the field already quantified what the CIA costs?
 
@@ -146,10 +152,11 @@ which always imposes the CIA, estimates a true correlation of 0.80 as 0.58 or
 0.46 with **zero** interval coverage when the CIA fails, and is unbiased when
 it holds. D'Orazio, Di Zio and Scanu's real-data example puts 0.0597 of mass
 on a cell whose true value is 0.0009, and puts positive mass on structural
-zeros [@dorazio2006jos]. Singh et al. (1993) are cited in
-[@dorazio2006book] in connection with hot-deck methods; the earlier
-description here (auxiliary information reduces the error) is **unconfirmed**,
-so do not cite it for that until the passage or the paper is read.
+zeros [@dorazio2006jos]. Singh et al. (1993), as reported in
+[@dorazio2006book, pp. 94–95, to confirm], go further: with auxiliary
+information, estimators do better using only its (Y, Z) part, even when
+micro-level auxiliary data on all of (X, Y, Z) exist. Cite through the book
+until Singh is read.
 
 Rässler's four levels of validity line up with our battery and give its
 vocabulary [@rassler2004]: preserving marginal distributions (level 4: our
@@ -409,6 +416,22 @@ worth reading for the γ (selection) component in its own right
    E ⊥ A, S | O); κ only moves along the line from the seed to whichever one
    you picked. Picking the wrong CIA cannot be repaired by tuning κ. This is
    the cleanest link to the field and should be stated as such.
+   Singh et al.'s finding (via [@dorazio2006book], pp. 94–95, to confirm)
+   is the matching-side version: with auxiliary micro-data, use it only for
+   the unidentified (Y, Z) association and let the main files supply the
+   rest. Here X = (A, S), Y = O, Z = E: a thin origin's own records are the
+   auxiliary micro-data, and the finding says to take from them only the
+   origin–education association, not the full (O, A, S, E) joint. That
+   matches what we see: separate IPF (uses the whole origin joint) fails or
+   is noisy; designs that take only a low-dimensional education mix from the
+   origin (separate max entropy, hierarchical shrinking toward the origin's
+   own mix) do best on thin-origin education. It also points to a design we
+   have not run, the RAKEYZ analogue: pooled IPF with one extra margin,
+   origin × education (by age stratum), estimated from the origin's own
+   records. That keeps the pool's age–education association (which separate
+   max entropy zeroes) and the origin's own education level. Caveats: the
+   extra margin carries the thin sample's noise and the γ selection bias,
+   and Singh's setting (survey files, not a selected seed) was not read.
 4. **Separate max entropy removes the bias but keeps no age–education
    association.** This is Rässler's level 3 failure, by construction: it is a
    CIA design, just with origin as the conditioning variable. Its MI of
@@ -447,7 +470,7 @@ worth reading for the γ (selection) component in its own right
 
 | Key | Verified against | Note |
 | --- | --- | --- |
-| dorazio2006book | Appendices A–D full text (Wiley Online Library, pp. 205–222); Ch. 1 passages pasted by Allison (A/B definition ~pp. 3–4, Sect. 1.4.1 ~pp. 8–9, pages to confirm); Booktopia listing | John Wiley & Sons Ltd 2006, ISBN 0-470-02353-8 (= 978-0-470-02353-2), book DOI 10.1002/0470023554 from the appendix DOIs. Chapters 2–5 not read; Singh et al. (1993) context unconfirmed |
+| dorazio2006book | Appendices A–D full text (Wiley Online Library, pp. 205–222); Ch. 1 passages pasted by Allison (A/B definition ~pp. 3–4, Sect. 1.4.1 ~pp. 8–9, pages to confirm); Booktopia listing | John Wiley & Sons Ltd 2006, ISBN 0-470-02353-8 (= 978-0-470-02353-2), book DOI 10.1002/0470023554 from the appendix DOIs. Chapters 2–5 not read except passages Allison reported on Singh et al. (1993), incl. pp. 94–95 (to confirm) |
 | dorazio2006jos | Full-text PDF (ISTAT) | JOS 22(1):137–157 |
 | rassler2002book | Springer page | LNS 168, DOI 10.1007/978-1-4613-0053-3 |
 | rassler2004 | Full-text PDF | Austrian J. Stat. 33(1&2):153–171 |
@@ -477,5 +500,6 @@ the NRC list gives the Treasury title "Statistical problems of merged data
 files", and the 2001 JOS reprint was not confirmed), Moriarity and Scheuren
 (2001), Okner (1972, NRC list gives *Annals of Economic and Social
 Measurement* 1:325–362), Manski's partial-identification work, and Singh et
-al. (1993). Wu et al. (2018) still carries its "[verify author list]" flag in
+al. (1993) itself (cited only through the book). Filippello et al. (2004)
+likewise only through the book. Wu et al. (2018) still carries its "[verify author list]" flag in
 `docs/maxent_design.md`; the ACM page did not load here.
