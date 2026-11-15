@@ -104,14 +104,38 @@ chapters were not available. Page numbers are the book's.
   0–1 loss (exact match within a cell). Not needed for Paper 1 beyond that
   link.
 
-**Claims in this note that only the main chapters can confirm:** the
-A/B-file definition of the matching problem and the CIA statement with its
-untestability (cited to the book in *The setup in matching terms* and in the
-related-work draft); Singh et al. (1993) as cited in the book (Q1); and
-anything about the uncertainty space, Fréchet bounds or logical constraints
-if cited to the book rather than to [@dorazio2006jos]. Until the chapters
-arrive, cite Appendix A (pp. 207–208) for non-identification and the JOS
-paper for the uncertainty space.
+**Main-chapter passages (Ch. 1), from text Allison pasted 2026-11-15.**
+Page numbers are approximate (taken from running heads in the paste);
+**Allison to confirm** before quoting.
+
+- **A/B definition (Sect. 1.1?, pp. 3–4; p. 4 confirmed by running head).**
+  A and B are two independent samples of i.i.d. records from f(x, y, z);
+  units in A have Z missing, units in B have Y missing; "when the objective
+  is to gain information on the joint distribution of (X, Y, Z) from the
+  observed samples A and B, we are dealing with the statistical matching
+  problem." Samples from finite populations are deferred to Chapter 5.
+  Confirms the setup paragraph above.
+- **Untestability and the three options (Sect. 1.4.1, pp. 8–9; p. 9
+  confirmed by running head).** Because no record has all variables, only a
+  few models for (X, Y, Z) are identifiable from A ∪ B, which "does not
+  contain enough information for the estimation of parameters such as the
+  correlation matrix or the contingency table of (Y, Z)", and "it is not
+  possible to test on A ∪ B which model is appropriate". The options are an
+  identifiable model justified by outside information (e.g. the CIA),
+  outside information that makes other models identifiable, or no
+  assumption, giving "a set rather than a point estimate" whose width
+  measures reliability. If the assumption is wrong, "no matter what
+  sophisticated inferential machinery is used", the results "will reflect
+  the assumption and not the real underlying model". Confirms the
+  untestability claim and supports citing the book (not only the JOS paper)
+  for the uncertainty-set idea. The last quotation is the one-line summary
+  of Paper 1: our planted truth measures how far each design's output
+  reflects its assumption rather than the truth.
+- **Still unconfirmed:** Singh et al. (1993). Allison reports the book cites
+  it in connection with hot-deck methods; our Q1 description (auxiliary
+  information reduces the error) was not checked against that passage and is
+  now marked as such. Fréchet bounds and logical constraints remain cited to
+  [@dorazio2006jos] and [@conti2012], which were read in full.
 
 ## Q1. Has the field already quantified what the CIA costs?
 
@@ -122,8 +146,10 @@ which always imposes the CIA, estimates a true correlation of 0.80 as 0.58 or
 0.46 with **zero** interval coverage when the CIA fails, and is unbiased when
 it holds. D'Orazio, Di Zio and Scanu's real-data example puts 0.0597 of mass
 on a cell whose true value is 0.0009, and puts positive mass on structural
-zeros [@dorazio2006jos]. Singh et al. (1993, cited in [@dorazio2006book]) show
-by simulation that auxiliary information reduces the error; not read here.
+zeros [@dorazio2006jos]. Singh et al. (1993) are cited in
+[@dorazio2006book] in connection with hot-deck methods; the earlier
+description here (auxiliary information reduces the error) is **unconfirmed**,
+so do not cite it for that until the passage or the paper is read.
 
 Rässler's four levels of validity line up with our battery and give its
 vocabulary [@rassler2004]: preserving marginal distributions (level 4: our
@@ -406,7 +432,7 @@ worth reading for the γ (selection) component in its own right
 
 | Key | Verified against | Note |
 | --- | --- | --- |
-| dorazio2006book | Appendices A–D full text (Wiley Online Library, pp. 205–222); Booktopia listing | John Wiley & Sons Ltd 2006, ISBN 0-470-02353-8 (= 978-0-470-02353-2), book DOI 10.1002/0470023554 from the appendix DOIs. **Main chapters not read**; see the appendices section for which claims still need them |
+| dorazio2006book | Appendices A–D full text (Wiley Online Library, pp. 205–222); Ch. 1 passages pasted by Allison (A/B definition ~pp. 3–4, Sect. 1.4.1 ~pp. 8–9, pages to confirm); Booktopia listing | John Wiley & Sons Ltd 2006, ISBN 0-470-02353-8 (= 978-0-470-02353-2), book DOI 10.1002/0470023554 from the appendix DOIs. Chapters 2–5 not read; Singh et al. (1993) context unconfirmed |
 | dorazio2006jos | Full-text PDF (ISTAT) | JOS 22(1):137–157 |
 | rassler2002book | Springer page | LNS 168, DOI 10.1007/978-1-4613-0053-3 |
 | rassler2004 | Full-text PDF | Austrian J. Stat. 33(1&2):153–171 |
