@@ -55,6 +55,63 @@ matching to informative sampling and non-ignorable nonresponse
 parametrically; nothing in the margins can detect γ, which is why calibration
 is exact at every γ while the university share moves by about ten points.
 
+### What the book's appendices support (D'Orazio, Di Zio and Scanu 2006, App. A–D)
+
+Checked 2026-11-15 against Appendices A–D only (book pp. 205–222); the main
+chapters were not available. Page numbers are the book's.
+
+- **Non-identification, formally.** Appendix A gives Rubin's (1974)
+  factorization for three variables where X1 and X2 are never observed
+  together and X3 is observed whenever X1 is: θ_{1|3} is estimable from
+  complete cases, θ_{2,3} with missing-data methods, and the association of
+  X1 and X2 given X3, θ_{1,2|3}, "is inestimable from the observed data set"
+  (pp. 207–208). The authors note the factorization is "particularly
+  helpful, in particular for the statistical matching problem" (p. 208).
+  This is the citable statement behind "the joint of Y and Z given X is not
+  identified" above; with origin as X1, education as X2 and age–sex as X3,
+  θ_{1,2|3} is exactly the origin-by-education association within age-sex
+  cells that the designs disagree about.
+- **The CIA as a loglinear model.** Appendix B writes conditional
+  independence of X1 and X2 given X3 as the loglinear model with only the
+  λ13 and λ23 interactions (p. 212), and gives IPF as the ML fit, starting
+  from a table "with an interaction structure no more complex than the fixed
+  loglinear model" (pp. 212–213). Read the other way, this is our design
+  point: IPF keeps the starting table's interactions, so **the seed chooses
+  the model**. A pooled seed has no origin–education interaction, so pooled
+  IPF fits the CIA model E ⊥ O | (A, S); a per-origin seed fits whatever
+  interactions that origin's few records happen to show. Use this to state
+  the table in *The setup in matching terms* in loglinear language.
+- **Why γ is a different problem (missingness mechanism).** Appendix A
+  defines MCAR, MAR and MNAR and says inference from the observed part alone
+  is appropriate only under MCAR or MAR (plus distinctness: "ignorable")
+  (p. 206). Our planted selection depends on SES, which is correlated with
+  education, the variable the margins do not carry; relative to the
+  population the seed is therefore selected non-ignorably on the attribute of
+  interest. That is the formal reason calibration to margins cannot detect or
+  correct γ (Q1 setup above, and [@marella_pfeffermann_nr]).
+- **Calibration guarantees only the controlled totals.** Appendix D:
+  calibration (GREG, raking-type) weights are the design weights changed
+  "as little as possible" so that the weighted sample reproduces known
+  auxiliary totals exactly (pp. 221–222); the model only affects efficiency
+  and the guarantees are design-based (p. 221), which presumes known,
+  positive inclusion probabilities (p. 220). Our seed under γ has neither
+  known inclusion probabilities nor a probability design, so "calibration is
+  exact at every γ" is a property of the method, not evidence about
+  education. One sentence in the methods section.
+- **Distance functions (App. C).** Gower distance and "donation classes"
+  (pp. 216–217) are the matching analogue of Beckman et al.'s D(p, c) with a
+  0–1 loss (exact match within a cell). Not needed for Paper 1 beyond that
+  link.
+
+**Claims in this note that only the main chapters can confirm:** the
+A/B-file definition of the matching problem and the CIA statement with its
+untestability (cited to the book in *The setup in matching terms* and in the
+related-work draft); Singh et al. (1993) as cited in the book (Q1); and
+anything about the uncertainty space, Fréchet bounds or logical constraints
+if cited to the book rather than to [@dorazio2006jos]. Until the chapters
+arrive, cite Appendix A (pp. 207–208) for non-identification and the JOS
+paper for the uncertainty space.
+
 ## Q1. Has the field already quantified what the CIA costs?
 
 **Yes, in general form.** The cost of matching under a false CIA has been
@@ -348,7 +405,7 @@ worth reading for the γ (selection) component in its own right
 
 | Key | Verified against | Note |
 | --- | --- | --- |
-| dorazio2006book | Booktopia listing (ISBN 9780470023532, 2006, 270 pp.) | Publisher Wiley, Chichester, per the StatMatch documentation |
+| dorazio2006book | Appendices A–D full text (Wiley Online Library, pp. 205–222); Booktopia listing | John Wiley & Sons Ltd 2006, ISBN 0-470-02353-8 (= 978-0-470-02353-2), book DOI 10.1002/0470023554 from the appendix DOIs. **Main chapters not read**; see the appendices section for which claims still need them |
 | dorazio2006jos | Full-text PDF (ISTAT) | JOS 22(1):137–157 |
 | rassler2002book | Springer page | LNS 168, DOI 10.1007/978-1-4613-0053-3 |
 | rassler2004 | Full-text PDF | Austrian J. Stat. 33(1&2):153–171 |
