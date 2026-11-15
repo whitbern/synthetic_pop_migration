@@ -88,7 +88,8 @@ chapters were not available. Page numbers are the book's.
   education, the variable the margins do not carry; relative to the
   population the seed is therefore selected non-ignorably on the attribute of
   interest. That is the formal reason calibration to margins cannot detect or
-  correct γ (Q1 setup above, and [@marella_pfeffermann_nr]).
+  correct γ (last paragraph of *The setup in matching terms*;
+  [@marella_pfeffermann_nr]).
 - **Calibration guarantees only the controlled totals.** Appendix D:
   calibration (GREG, raking-type) weights are the design weights changed
   "as little as possible" so that the weighted sample reproduces known
