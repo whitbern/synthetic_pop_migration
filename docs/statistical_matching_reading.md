@@ -135,7 +135,7 @@ Page numbers are approximate (taken from running heads in the paste);
   reported 2026-11-15; Singh itself not read). The book cites it for hot
   deck, the loglinear step, mean matching, RAKEYZ (raking with an auxiliary
   (Y, Z) table), categorical methods and the choice of matching variables.
-  In the Bayesian chapter (pp. 94–95, **Allison to confirm**): "There is an
+  In the Bayesian chapter (pp. 94–95, confirmed by Allison 2026-11-15): "There is an
   interesting finding in Singh et al. (1993) and Filippello et al. (2004).
   They state that estimators perform better by using only information
   concerning (Y, Z) also when auxiliary information is available at micro
@@ -153,7 +153,7 @@ which always imposes the CIA, estimates a true correlation of 0.80 as 0.58 or
 it holds. D'Orazio, Di Zio and Scanu's real-data example puts 0.0597 of mass
 on a cell whose true value is 0.0009, and puts positive mass on structural
 zeros [@dorazio2006jos]. Singh et al. (1993), as reported in
-[@dorazio2006book, pp. 94–95, to confirm], go further: with auxiliary
+[@dorazio2006book, pp. 94–95], go further: with auxiliary
 information, estimators do better using only its (Y, Z) part, even when
 micro-level auxiliary data on all of (X, Y, Z) exist. Cite through the book
 until Singh is read.
@@ -416,7 +416,7 @@ worth reading for the γ (selection) component in its own right
    E ⊥ A, S | O); κ only moves along the line from the seed to whichever one
    you picked. Picking the wrong CIA cannot be repaired by tuning κ. This is
    the cleanest link to the field and should be stated as such.
-   Singh et al.'s finding (via [@dorazio2006book], pp. 94–95, to confirm)
+   Singh et al.'s finding (via [@dorazio2006book], pp. 94–95)
    is the matching-side version: with auxiliary micro-data, use it only for
    the unidentified (Y, Z) association and let the main files supply the
    rest. Here X = (A, S), Y = O, Z = E: a thin origin's own records are the
@@ -470,7 +470,7 @@ worth reading for the γ (selection) component in its own right
 
 | Key | Verified against | Note |
 | --- | --- | --- |
-| dorazio2006book | Appendices A–D full text (Wiley Online Library, pp. 205–222); Ch. 1 passages pasted by Allison (A/B definition ~pp. 3–4, Sect. 1.4.1 ~pp. 8–9, pages to confirm); Booktopia listing | John Wiley & Sons Ltd 2006, ISBN 0-470-02353-8 (= 978-0-470-02353-2), book DOI 10.1002/0470023554 from the appendix DOIs. Chapters 2–5 not read except passages Allison reported on Singh et al. (1993), incl. pp. 94–95 (to confirm) |
+| dorazio2006book | Appendices A–D full text (Wiley Online Library, pp. 205–222); Ch. 1 passages pasted by Allison (A/B definition ~pp. 3–4, Sect. 1.4.1 ~pp. 8–9, pages to confirm); Booktopia listing | John Wiley & Sons Ltd 2006, ISBN 0-470-02353-8 (= 978-0-470-02353-2), book DOI 10.1002/0470023554 from the appendix DOIs. Chapters 2–5 not read except passages Allison reported on Singh et al. (1993), incl. pp. 94–95 (confirmed) |
 | dorazio2006jos | Full-text PDF (ISTAT) | JOS 22(1):137–157 |
 | rassler2002book | Springer page | LNS 168, DOI 10.1007/978-1-4613-0053-3 |
 | rassler2004 | Full-text PDF | Austrian J. Stat. 33(1&2):153–171 |
