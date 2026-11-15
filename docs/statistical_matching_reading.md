@@ -261,9 +261,24 @@ the Bangladesh DHS by nearest-neighbour matching [@namazirad2017]; Hörl and
 Balac attach travel-survey activity chains to a synthetic Paris population
 [@horl2021] (that they call this step statistical matching was not confirmed
 from the full text); and the microsimulation literature discusses the CIA
-directly when imputing expenditure into income data [@decoster2020]. None of
-these treats the uncontrolled attribute in the seed-based synthesis step
-itself as a matching problem, nor reports its uncertainty space.
+directly when imputing expenditure into income data [@decoster2020]. A
+recent machine-learning example is SynthPop++ [@neekhra2023] (read in full,
+arXiv v2): IPU [@ye2009] on Indian Census 2011 margins, then a CTGAN
+conditioned on age and sex adds attributes "for which marginals are not
+available" (weight, height, comorbidities) from the IHDS-II survey (pp. 3,
+5). That is the CIA with age–sex as X, made by a neural network and not
+named; the abstract presents it as combining surveys "with different,
+partially overlapping sets of attributes" (p. 1), yet cites no matching or
+data-fusion work, and lists such combination as future work (p. 9). It also
+uses state-level (Maharashtra) microdata for Mumbai because the Mumbai
+subsample is "a few hundred samples, which are not enough" (p. 5): the
+pooled-seed choice, made for the same reason as ours and with the same
+untested homogeneity assumption. Validation compares synthetic to source
+survey distributions (marginals, scatter plots, train-on-synthetic
+regression; pp. 6–7), so as with Guo–Bhat and Ye there is no truth against
+which the borrowed association could be wrong. None of these treats the
+uncontrolled attribute in the seed-based synthesis step itself as a
+matching problem, nor reports its uncertainty space.
 
 **So the bridge paragraph is warranted, with one correction**: synthesis
 practice makes the CIA inside IPF or maximum entropy without connecting it to
@@ -451,6 +466,7 @@ worth reading for the γ (selection) component in its own right
 | ye2009 | Full text of the TRB 88th Annual Meeting paper (uploaded, "submitted for presentation only"); TRID record 881554 | Conference paper, not peer-reviewed journal; Xin Ye (not Peijun Ye). Paper number not confirmed |
 | little_wu1991 | Title from library catalogue; volume and pages from Beckman et al.'s reference list | JASA 86:87–95; Beckman's list says "known marginals", the published title says "known margins"; issue/DOI not confirmed |
 | yameogo2021 | JASSS page | 24(2):5, DOI 10.18564/jasss.4482 |
+| neekhra2023 | Full text, arXiv 2304.12284v2 (16 May 2024; uploaded) | Workshop paper, AI4ABM at ICLR 2023 ("accepted for oral presentation"); not peer-reviewed journal. Cite as workshop/arXiv |
 | namazirad2017 | UOW repository | CEUS 63:3–14; DOI not shown |
 | horl2021 | ETH Research Collection, Wikipedia citation | TR-C 130:103291, DOI 10.1016/j.trc.2021.103291 |
 | decoster2020 | IJM page | IJM 13(3):70–94, DOI 10.34196/ijm.00226 |
