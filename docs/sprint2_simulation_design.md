@@ -56,7 +56,7 @@ target composition exactly:
 | Target | Value | Source |
 | --- | --- | --- |
 | Origin shares | Venezuela 0.840, Haiti 0.067, Ecuador 0.052, Cuba 0.034, Cameroon 0.007 | Servicio Nacional de Migración (Panama), irregular transit through Darién by nationality (Cuadro 003), Jan–Sep 2022: 151,582 entries, 71.05% Venezuelan; renormalised to the five study groups (84.6% of the flow) |
-| Male share | 0.715 | midpoint of the 68–75% range |
+| Male share | 0.745 | Servicio Nacional de Migración, flow-wide share (Cuadro 002), Jan–Sep 2022 |
 | Mean age | 31.0 years | |
 | Share aged 65+ | 0.005 | "almost no elderly" |
 

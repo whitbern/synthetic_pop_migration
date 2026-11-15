@@ -1,8 +1,7 @@
 # Progress report (15 November 2026)
 
 Paper 1, V&V course. Compiled from the build plan, the `docs/` write-ups,
-the run log and merged PRs #1–#16. Items marked **[check]** are ones the
-repository does not settle and Allison should confirm before submitting.
+the run log and merged PRs #1–#16. Points the repository could not settle were confirmed by Allison on 15 Nov.
 
 ## 1. What I completed since the proposal
 
@@ -59,7 +58,7 @@ repository does not settle and Allison should confirm before submitting.
 | The paper's claim is reframed | Statistical matching already measured what conditional independence costs in general (Rodgers 1984; Rässler 2004). The paper claims the synthesis setting: each design is a different conditional independence, measured against a planted truth |
 | Origin counts cited to Servicio Nacional de Migración, not SENAFRONT | That is the source of the tables actually used |
 | The UNHCR BPM got three defined roles (reality check, plausibility check, bridge to Paper 2) | Decided 11 Nov. It is still not the seed |
-| No household-level design | The BPM has no household roster, so travel groups cannot be reconstructed. **[check]** whether the proposal promised a household-level analysis |
+| No household-level design | The BPM has no household roster, so travel groups cannot be reconstructed. The proposal did not promise a household-level analysis, so this is not a departure from it |
 | Fréchet-bounds design deferred to the journal version | Tight for the dominant origin and vacuous for thin ones, and it cannot cover the γ selection error |
 | Two-level prior for the hierarchical design skipped | Agreed 15 Nov |
 | Adult age-shape recalibration deferred | It is a robustness option and blocks nothing |
@@ -75,10 +74,9 @@ repository does not settle and Allison should confirm before submitting.
 - Not built: replicate-sample uncertainty intervals and coverage (see §7),
   Jensen–Shannon divergence on the joint, the pooled IPUMS International
   truth for the robustness replication (only the `EDATTAIN` collapse is in
-  place). **[check]** whether the IPUMS International extracts have been
-  downloaded.
-- One stale number to fix: `docs/sprint2_simulation_design.md` lists the male
-  target as 0.715, but the config and the plausibility check use 0.745.
+  place). The IPUMS International extracts are downloaded.
+- The male-share target is 0.745 (SNM Cuadro 002). The Sprint 2 doc's stale
+  0.715 is corrected in this PR.
 
 ## 4. V&V activities completed or underway
 
@@ -102,7 +100,8 @@ microdata:
 **Convergence verification (partly done).** IPF records its deviation after
 every cycle (`IPFResult.history`) and the design runs log iterations and max
 deviation. The comparison of a real ACS trace against Ye et al. (2022)'s
-prediction has not been written up. **[check]** whether you looked at it.
+prediction has not been written up. Allison has looked at the per-cycle
+deviations, but has not yet compared them with Ye et al.'s prediction.
 
 **Validation against a planted truth (done).** Every design is scored within
 each origin against the frozen truth: adult SRMSE, university-share error,
@@ -201,14 +200,13 @@ Must do:
 5. Turn the per-sprint assumptions lists into one Method subsection, and write
    the "why these V&V methods are appropriate" argument.
 6. Write the Introduction, Background, Discussion, Conclusion and Abstract;
-   assemble everything in the `acmart` template. **[check]** whether the
-   template is set up locally; it is not in the repository.
+   assemble everything in the `acmart` template (set up locally, not in the
+   repository).
 7. References: resolve open flags (Wu et al. 2018 author list, Marella &
    Pfeffermann venue, Beckman journal page numbers, D'Orazio Ch. 1 pages, the
    two `[citation]` marks for mean age 31 and 0.5% 65+), and add the dataset
    and software citations (ACS PUMS, UNHCR BPM, SNM, IPUMS if used, NumPy and
    other libraries with versions).
-8. Fix the stale male-share target (0.715 → 0.745) in the Sprint 2 doc.
 
 Optional, if time allows: the IPUMS International robustness replication,
 the adult age-shape recalibration, Jensen–Shannon divergence on the joint.
