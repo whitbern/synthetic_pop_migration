@@ -222,3 +222,85 @@ def test_pooled_limit_is_what_pooled_ipf_gives_with_the_truth_as_seed(rich):
         est, tru = d.table[k][:, adults], truth[k][:, adults]
         assert h["pooled_limit_tvd"] == pytest.approx(tvd(est, tru), abs=1e-8)
         assert h["pooled_limit_tvd"] > 0.01  # the simulated origins do differ
+
+
+# --- pooled_edu: pooled seed + origin x education-by-stratum target (RAKEYZ analogue) ---
+
+
+def _stratum_shares(table, strata):
+    """origin x stratum x education shares of an (origin, male, age_band, edattain) table."""
+    t = table.sum(axis=1)  # origin, age_band, edattain
+    out = np.zeros((t.shape[0], int(strata.max()) + 1, t.shape[-1]))
+    for b, st in enumerate(strata):
+        out[:, st] += t[:, b]
+    with np.errstate(invalid="ignore", divide="ignore"):
+        return out / out.sum(axis=-1, keepdims=True)
+
+
+def test_pooled_edu_meets_controls_and_the_origin_education_target(rich):
+    _, margins, sample, edges = rich
+    d = fit_ipf_design(margins, sample, "pooled_edu", age_edges=edges)
+    assert not d.failed
+    ctrl = d.table.sum(axis=-1)
+    for axes, target in margins.margins:
+        np.testing.assert_allclose(marginal(ctrl, axes), target, rtol=1e-8, atol=1e-6)
+    from synthpop.design_ipf import _band_strata
+    strata, used = _band_strata((0, 5, 18), edges)
+    assert used == (0, 18)  # 5 is not a band edge once 0-4 is merged into 0-17
+    target = np.asarray(d.notes["origin_education_target"])
+    got = d.table.sum(axis=1)
+    by_stratum = np.zeros_like(target)
+    for b, st in enumerate(strata):
+        by_stratum[:, st] += got[:, b]
+    np.testing.assert_allclose(by_stratum, target, rtol=1e-8, atol=1e-6)
+
+
+def test_pooled_edu_takes_the_origins_own_education_level(rich):
+    _, margins, sample, edges = rich
+    from synthpop.design_ipf import _band_strata
+    strata, _ = _band_strata((0, 5, 18), edges)
+    d = fit_ipf_design(margins, sample, "pooled_edu", age_edges=edges)
+    own = crosstab(sample, ["origin", "male", "age_band", "edattain"], dict(margins.levels, edattain=5),
+                   weight=sample["weight"])
+    np.testing.assert_allclose(_stratum_shares(d.table, strata), _stratum_shares(own, strata), atol=1e-8)
+    # ...whereas pooled IPF gives every origin roughly the pool's level, so the two differ.
+    p = fit_ipf_design(margins, sample, "pooled", age_edges=edges)
+    assert np.nanmax(np.abs(_stratum_shares(p.table, strata) - _stratum_shares(own, strata))) > 0.01
+
+
+def test_pooled_edu_keeps_an_age_education_association(rich):
+    """Unlike separate maximum entropy, the within-stratum age-education pattern (from the pool) survives."""
+    flow, margins, sample, edges = rich
+    variables = margins.variables + ("edattain",)
+    truth = crosstab(flow, variables, dict(margins.levels, edattain=5))
+    d = fit_ipf_design(margins, sample, "pooled_edu", age_edges=edges)
+    for c in range(len(ORIGINS)):
+        s = score_origin(d.table, truth, variables, c, band_edges=edges)
+        assert s["mi_edattain_age"] > 1e-4
+
+
+def test_pooled_edu_fits_a_thin_group_that_separate_cannot(thin):
+    flow, margins, sample, _ = thin
+    c = ORIGINS.index("C")
+    assert fit_ipf_design(margins, sample, "separate").groups[c]["failure"]
+    d = fit_ipf_design(margins, sample, "pooled_edu")
+    assert not d.failed and np.all(np.isfinite(d.table))
+    # Adult university share of C is C's own (weighted) sample share.
+    adult = sample["age"] >= 18
+    mine = adult & (sample["origin"] == c)
+    w = sample["weight"]
+    own_univ = w[mine & (sample["edattain"] == 4)].sum() / w[mine].sum()
+    from synthpop.scoring import adult_bands
+    t = d.table[c][:, adult_bands()]
+    assert t[..., 4].sum() / t.sum() == pytest.approx(own_univ, abs=1e-8)
+
+
+def test_pooled_edu_falls_back_to_pooled_shares_and_reports_it(thin):
+    _, margins, sample, _ = thin
+    c = ORIGINS.index("C")
+    keep = ~((sample["origin"] == c) & (sample["age"] < 18))  # C has no children in the sample
+    s2 = subset(sample, np.flatnonzero(keep))
+    d = fit_ipf_design(margins, s2, "pooled_edu")
+    fb = d.notes["fallbacks_to_pooled"]
+    assert {"origin": c, "stratum": 0} in fb and {"origin": c, "stratum": 1} in fb
+    assert not d.failed

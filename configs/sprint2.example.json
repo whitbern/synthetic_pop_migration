@@ -49,7 +49,8 @@
   "ipf": {
     "_comment": "Optional. drop_age_edges: age-band lower edges to remove for IPF (e.g. [5] merges 0-4 into 0-17); global and reported, never per origin. Default [] (strict).",
     "drop_age_edges": [],
-    "variants": ["pooled", "separate"],
+    "variants": ["pooled", "separate", "pooled_edu"],
+    "_variants_comment": "pooled_edu = pooled seed + origin x education-by-stratum target from each origin's own records (RAKEYZ analogue); its strata come from maxent.strata_edges if set, else [0, 5, 18].",
     "population": true
   },
   "crossover": {
