@@ -139,10 +139,24 @@ papers checked do not frame the core synthesis step as matching:
   statistically independent in the generated synthetic population", which is
   the CIA under another name and without the literature behind it.
 - Yaméogo et al. [@yameogo2021] mention data fusion only as future work.
-- Beckman, Baggerly and McKay (1996), Guo and Bhat (2007) and Ye et al.
-  (2009) were **not** checked in full text (paywalled). The claim "the
-  synthesis-method literature does not cite matching" needs that check before
-  it goes in the paper; until then write "the synthesis reviews we examined".
+- Beckman, Baggerly and McKay [@beckman1996] (checked 2026-11-15 against the
+  full text of the Los Alamos TRANSIMS/TMIP report version, *Creating
+  Synthetic Baseline Populations*; page numbers below are the report's, see
+  the verification table) **cite no matching or data-fusion work**: the
+  reference list (pp. 18–19) is travel-behaviour papers, the 1990 census
+  documentation, Deming and Stephan (1940), Ireland and Kullback (1968),
+  Little and Wu (1991) and Breiman et al. (1984). But they do **not** make the
+  assumption silently. They assume that "all of the census tracts ... that
+  contribute to a PUMA have the same correlation structure", measured by odds
+  ratios (p. 5), and say that "without this or similar assumptions the
+  estimation of odds ratios for individual tables is intractable" (p. 8).
+  That is the non-identification, stated, and resolved by a homogeneity
+  assumption, without the matching vocabulary. See *Beckman et al. as a
+  precedent* below for what this means for us.
+- Guo and Bhat (2007) and Ye et al. (2009) were **not** checked in full text
+  (paywalled). The claim "the synthesis-method literature does not cite
+  matching" needs that check before it goes in the paper; until then write
+  "the synthesis reviews and papers we examined".
 
 Where the literatures do touch is applied pipelines that use matching as a
 **separate attribute-attachment step after synthesis**: Namazi-Rad et al.
@@ -155,9 +169,77 @@ directly when imputing expenditure into income data [@decoster2020]. None of
 these treats the uncontrolled attribute in the seed-based synthesis step
 itself as a matching problem, nor reports its uncertainty space.
 
-**So the bridge paragraph is warranted**: synthesis practice makes the CIA
-silently, inside IPF or maximum entropy, and then validates against margins,
-which (Rässler's level 4) cannot test it.
+**So the bridge paragraph is warranted, with one correction**: synthesis
+practice makes the CIA inside IPF or maximum entropy without connecting it to
+the matching literature or its uncertainty results, and mostly validates
+against margins, which (Rässler's level 4) cannot test it. It is not true that
+the founding paper makes the assumption *silently*: Beckman et al. state it
+(as homogeneity of odds ratios across tracts) and justify it as necessary.
+
+### Beckman et al. as a precedent
+
+What the full text shows, with report page numbers:
+
+- **Seed and margins.** Tract (or block-group) margins from STF-3A; the seed
+  is the multiway table built from the PUMS of the PUMA containing the tract
+  (p. 2, p. 5). IPF estimates "maintain the
+  same odds ratios as those in the sample table in the absence of any
+  marginal information to the contrary", citing Little and Wu (1991) (p. 6).
+  Whole PUMS households are then drawn in proportion to the fitted table,
+  with a 0–1 distance so only exact matches are drawn (pp. 11–12); multiple
+  draws are suggested to carry synthesis uncertainty (p. 12).
+- **The assumption is our pooled-IPF assumption.** Every tract in a PUMA is
+  fitted from the same PUMA seed, so tracts inherit the PUMA's odds ratios.
+  Map tract to origin and PUMA to the pooled seed: for an attribute with no
+  margin (our education), equal odds ratios across groups reduces to
+  E ⊥ O | (A, S), the pooled-IPF row of the table above. Their "statistically
+  correct" variant, a joint (m+1)-way fit with tract as a dimension whose
+  combined odds ratios equal the PUMS (pp. 8–10), keeps the same homogeneity
+  assumption; it "only marginally outperforms" fitting tracts one at a time
+  (p. 16). Neither variant has a separate (tract-own) seed, because no tract
+  microdata exist.
+- **Attributes only in the sample.** Attributes outside the fitted table
+  ride along on the drawn PUMS households. Their validation targets exactly
+  those: household size, which STF-3A has but the fit does not use (p. 13),
+  and the joint of household size and vehicles (pp. 13–15). They also tried
+  imputing household size from the PUMS with CART and found it added
+  variability but no improvement (pp. 15–16).
+- **Planted-truth validation with heterogeneity.** Their second validation
+  treats 22 San Francisco Bay Area PUMAs as pseudo-tracts and a 5% "super
+  PUMS" drawn from all 22 as the seed (pp. 13–14): the same design as ours,
+  with origin in place of tract. The worst errors are the three City of San
+  Francisco PUMAs, known to differ (fewer vehicles), where vehicles for small
+  households are overestimated and single-person no-vehicle households
+  "greatly underestimated"; they were added "to see if a few heterogeneous
+  census tracts in a PUMA would invalidate the procedure" (p. 14). That is
+  our pooled-design bias for thin, dissimilar origins, observed in 1996 on
+  three units. They then argue real tracts are more homogeneous than their
+  pseudo-tracts (p. 14). Our setting is the case where that argument fails:
+  origins are not more homogeneous than the pool, and the thin ones are the
+  ones of interest.
+- **Zero cells.** IPF keeps sample zeros (609 of 11,760 family cells nonzero,
+  p. 15); adding 0.01 to empty cells "badly biases" the margins and is "not
+  recommended" (p. 16). Relevant to our separate-IPF failures and to the
+  hierarchical design, which fills empty cells by borrowing instead of by a
+  constant.
+- **Independence baseline.** Multiplying the margins (full independence) and
+  drawing from the PUMS "badly biases" the margins and the household
+  size × vehicles joint; "not recommended" (pp. 16–17). This is the
+  independence baseline our maximum-entropy designs sit close to.
+
+How to use it in the paper: cite Beckman et al. as the origin of the
+assumption we test (same seed odds ratios for every subgroup sharing a seed),
+and as the first planted-truth check of it. Our contribution relative to them
+is to make the subgroup the object of interest, vary its size and its
+distance from the pool, and name the assumption as a CIA so the matching
+results (uncertainty space, bounds) apply.
+
+Not in Beckman, contrary to what one might expect: no discussion of selection
+or non-representative seeds (although they cite Little and Wu, whose title is
+about target and sampled populations differing), and no reference to the
+conditional independence assumption or to matching. Little and Wu (1991) is
+worth reading for the γ (selection) component in its own right
+[@little_wu1991].
 
 ## Positioning the Sprint 4 findings
 
@@ -203,11 +285,16 @@ which (Rässler's level 4) cannot test it.
 > constraints and auxiliary information [@dorazio2006jos; @conti2012;
 > @fosdick2016]. Population synthesis has used matching to attach survey
 > attributes after the fact [@namazirad2017; @horl2021], but the synthesis
-> methods themselves, and their reviews [@chapuis2022], make the same
-> independence assumption inside the fitting step without naming it, and
-> validate against margins that cannot test it. We make the assumption
-> explicit: each design we compare corresponds to a different conditional
-> independence, and the planted truth lets us measure what each costs.
+> methods themselves make the same independence assumption inside the
+> fitting step. Beckman et al. state it, as subgroups sharing the seed's odds
+> ratios, and justify it as necessary for tractability [@beckman1996]; the
+> reviews describe it as a property of independent sampling
+> [@chapuis2022]; neither connects it to the matching results on what it
+> costs or how to bound it. We make that connection: each design we compare
+> corresponds to a different conditional independence, and the planted truth
+> lets us measure what each costs for subgroups that differ from the pool,
+> the case Beckman et al. observed in three heterogeneous pseudo-tracts and
+> set aside as rare.
 
 ## Verification status of references
 
@@ -227,6 +314,8 @@ which (Rässler's level 4) cannot test it.
 | leulescu2013 | Eurostat PDF cover | Methodologies and Working Papers, doi:10.2785/44822 |
 | marella_pfeffermann_nr | Southampton ePrints PDF | Title and authors only; **venue and year not confirmed**, find before citing |
 | chapuis2022 | JASSS page | 25(2):6, DOI 10.18564/jasss.4762 |
+| beckman1996 | Full text of the Los Alamos TRANSIMS/TMIP report version (uploaded scan, 19 pp. + tables/figures); journal citation from RePEc | TR-A 30(6):415–429. Page numbers cited in this note are the **report's**; map to journal pages before quoting. DOI 10.1016/0965-8564(96)00004-3 not confirmed (Crossref blocked here) |
+| little_wu1991 | Title from library catalogue; volume and pages from Beckman et al.'s reference list | JASA 86:87–95; Beckman's list says "known marginals", the published title says "known margins"; issue/DOI not confirmed |
 | yameogo2021 | JASSS page | 24(2):5, DOI 10.18564/jasss.4482 |
 | namazirad2017 | UOW repository | CEUS 63:3–14; DOI not shown |
 | horl2021 | ETH Research Collection, Wikipedia citation | TR-C 130:103291, DOI 10.1016/j.trc.2021.103291 |
