@@ -55,6 +55,94 @@ matching to informative sampling and non-ignorable nonresponse
 parametrically; nothing in the margins can detect γ, which is why calibration
 is exact at every γ while the university share moves by about ten points.
 
+### What the book's appendices support (D'Orazio, Di Zio and Scanu 2006, App. A–D)
+
+Checked 2026-11-15 against Appendices A–D only (book pp. 205–222); the main
+chapters were not available. Page numbers are the book's.
+
+- **Non-identification, formally.** Appendix A gives Rubin's (1974)
+  factorization for three variables where X1 and X2 are never observed
+  together and X3 is observed whenever X1 is: θ_{1|3} is estimable from
+  complete cases, θ_{2,3} with missing-data methods, and the association of
+  X1 and X2 given X3, θ_{1,2|3}, "is inestimable from the observed data set"
+  (pp. 207–208). The authors note the factorization is "particularly
+  helpful, in particular for the statistical matching problem" (p. 208).
+  This is the citable statement behind "the joint of Y and Z given X is not
+  identified" above; with origin as X1, education as X2 and age–sex as X3,
+  θ_{1,2|3} is exactly the origin-by-education association within age-sex
+  cells that the designs disagree about.
+- **The CIA as a loglinear model.** Appendix B writes conditional
+  independence of X1 and X2 given X3 as the loglinear model with only the
+  λ13 and λ23 interactions (p. 212), and gives IPF as the ML fit, starting
+  from a table "with an interaction structure no more complex than the fixed
+  loglinear model" (pp. 212–213). Read the other way, this is our design
+  point: IPF keeps the starting table's interactions, so **the seed chooses
+  the model**. A pooled seed has no origin–education interaction, so pooled
+  IPF fits the CIA model E ⊥ O | (A, S); a per-origin seed fits whatever
+  interactions that origin's few records happen to show. Use this to state
+  the table in *The setup in matching terms* in loglinear language.
+- **Why γ is a different problem (missingness mechanism).** Appendix A
+  defines MCAR, MAR and MNAR and says inference from the observed part alone
+  is appropriate only under MCAR or MAR (plus distinctness: "ignorable")
+  (p. 206). Our planted selection depends on SES, which is correlated with
+  education, the variable the margins do not carry; relative to the
+  population the seed is therefore selected non-ignorably on the attribute of
+  interest. That is the formal reason calibration to margins cannot detect or
+  correct γ (last paragraph of *The setup in matching terms*;
+  [@marella_pfeffermann_nr]).
+- **Calibration guarantees only the controlled totals.** Appendix D:
+  calibration (GREG, raking-type) weights are the design weights changed
+  "as little as possible" so that the weighted sample reproduces known
+  auxiliary totals exactly (pp. 221–222); the model only affects efficiency
+  and the guarantees are design-based (p. 221), which presumes known,
+  positive inclusion probabilities (p. 220). Our seed under γ has neither
+  known inclusion probabilities nor a probability design, so "calibration is
+  exact at every γ" is a property of the method, not evidence about
+  education. One sentence in the methods section.
+- **Distance functions (App. C).** Gower distance and "donation classes"
+  (pp. 216–217) are the matching analogue of Beckman et al.'s D(p, c) with a
+  0–1 loss (exact match within a cell). Not needed for Paper 1 beyond that
+  link.
+
+**Main-chapter passages (Ch. 1), from text Allison pasted 2026-11-15.**
+Page numbers are approximate (taken from running heads in the paste);
+**Allison to confirm** before quoting.
+
+- **A/B definition (Sect. 1.1?, pp. 3–4; p. 4 confirmed by running head).**
+  A and B are two independent samples of i.i.d. records from f(x, y, z);
+  units in A have Z missing, units in B have Y missing; "when the objective
+  is to gain information on the joint distribution of (X, Y, Z) from the
+  observed samples A and B, we are dealing with the statistical matching
+  problem." Samples from finite populations are deferred to Chapter 5.
+  Confirms the setup paragraph above.
+- **Untestability and the three options (Sect. 1.4.1, pp. 8–9; p. 9
+  confirmed by running head).** Because no record has all variables, only a
+  few models for (X, Y, Z) are identifiable from A ∪ B, which "does not
+  contain enough information for the estimation of parameters such as the
+  correlation matrix or the contingency table of (Y, Z)", and "it is not
+  possible to test on A ∪ B which model is appropriate". The options are an
+  identifiable model justified by outside information (e.g. the CIA),
+  outside information that makes other models identifiable, or no
+  assumption, giving "a set rather than a point estimate" whose width
+  measures reliability. If the assumption is wrong, "no matter what
+  sophisticated inferential machinery is used", the results "will reflect
+  the assumption and not the real underlying model". Confirms the
+  untestability claim and supports citing the book (not only the JOS paper)
+  for the uncertainty-set idea. The last quotation is the one-line summary
+  of Paper 1: our planted truth measures how far each design's output
+  reflects its assumption rather than the truth.
+- **Singh et al. (1993), as the book uses it** (from passages Allison
+  reported 2026-11-15; Singh itself not read). The book cites it for hot
+  deck, the loglinear step, mean matching, RAKEYZ (raking with an auxiliary
+  (Y, Z) table), categorical methods and the choice of matching variables.
+  In the Bayesian chapter (pp. 94–95, confirmed by Allison 2026-11-15): "There is an
+  interesting finding in Singh et al. (1993) and Filippello et al. (2004).
+  They state that estimators perform better by using only information
+  concerning (Y, Z) also when auxiliary information is available at micro
+  level on all the variables (X, Y, Z)". See *Positioning*, item 3, for what
+  this means for our designs. Fréchet bounds and logical constraints remain
+  cited to [@dorazio2006jos] and [@conti2012], which were read in full.
+
 ## Q1. Has the field already quantified what the CIA costs?
 
 **Yes, in general form.** The cost of matching under a false CIA has been
@@ -64,8 +152,11 @@ which always imposes the CIA, estimates a true correlation of 0.80 as 0.58 or
 0.46 with **zero** interval coverage when the CIA fails, and is unbiased when
 it holds. D'Orazio, Di Zio and Scanu's real-data example puts 0.0597 of mass
 on a cell whose true value is 0.0009, and puts positive mass on structural
-zeros [@dorazio2006jos]. Singh et al. (1993, cited in [@dorazio2006book]) show
-by simulation that auxiliary information reduces the error; not read here.
+zeros [@dorazio2006jos]. Singh et al. (1993), as reported in
+[@dorazio2006book, pp. 94–95], go further: with auxiliary
+information, estimators do better using only its (Y, Z) part, even when
+micro-level auxiliary data on all of (X, Y, Z) exist. Cite through the book
+until Singh is read.
 
 Rässler's four levels of validity line up with our battery and give its
 vocabulary [@rassler2004]: preserving marginal distributions (level 4: our
@@ -139,10 +230,36 @@ papers checked do not frame the core synthesis step as matching:
   statistically independent in the generated synthetic population", which is
   the CIA under another name and without the literature behind it.
 - Yaméogo et al. [@yameogo2021] mention data fusion only as future work.
-- Beckman, Baggerly and McKay (1996), Guo and Bhat (2007) and Ye et al.
-  (2009) were **not** checked in full text (paywalled). The claim "the
-  synthesis-method literature does not cite matching" needs that check before
-  it goes in the paper; until then write "the synthesis reviews we examined".
+- Beckman, Baggerly and McKay [@beckman1996] (checked 2026-11-15 against the
+  full text of the Los Alamos TRANSIMS/TMIP report version, *Creating
+  Synthetic Baseline Populations*; page numbers below are the report's, see
+  the verification table) **cite no matching or data-fusion work**: the
+  reference list (pp. 18–19) is travel-behaviour papers, the 1990 census
+  documentation, Deming and Stephan (1940), Ireland and Kullback (1968),
+  Little and Wu (1991) and Breiman et al. (1984). But they do **not** make the
+  assumption silently. They assume that "all of the census tracts ... that
+  contribute to a PUMA have the same correlation structure", measured by odds
+  ratios (p. 5), and say that "without this or similar assumptions the
+  estimation of odds ratios for individual tables is intractable" (p. 8).
+  That is the non-identification, stated, and resolved by a homogeneity
+  assumption, without the matching vocabulary. See *Beckman et al. as a
+  precedent* below for what this means for us.
+- Guo and Bhat [@guo_bhat2007] and Ye et al. [@ye2009] (checked 2026-11-15
+  against full texts: the Guo–Bhat author manuscript and the Ye et al. TRB
+  2009 conference paper; page numbers are those documents' own) also **cite
+  no matching or data-fusion work** (reference lists: Guo–Bhat pp. 20–21,
+  Ye et al. pp. 18–19). Both frame their contribution as extending Beckman
+  et al. to control person-level as well as household-level margins
+  (Guo–Bhat pp. 1, 7–8; Ye et al. pp. 4–5), not as anything about the
+  uncontrolled attributes. Guo and Bhat describe the IPF step as one that
+  "preserves the correlation structure observed in the sample households"
+  of the seed area (p. 4), i.e. the Beckman assumption restated as a
+  property of the algorithm rather than an assumption; Ye et al. do not
+  discuss it.
+- With these three in full text and Chapuis et al. partially, the claim can
+  now be made for **the founding synthesis-method papers we examined**
+  (Beckman, Guo–Bhat, Ye) and the review: none cites matching. Keep the
+  scope qualifier; it is not a census of the field.
 
 Where the literatures do touch is applied pipelines that use matching as a
 **separate attribute-attachment step after synthesis**: Namazi-Rad et al.
@@ -151,13 +268,128 @@ the Bangladesh DHS by nearest-neighbour matching [@namazirad2017]; Hörl and
 Balac attach travel-survey activity chains to a synthetic Paris population
 [@horl2021] (that they call this step statistical matching was not confirmed
 from the full text); and the microsimulation literature discusses the CIA
-directly when imputing expenditure into income data [@decoster2020]. None of
-these treats the uncontrolled attribute in the seed-based synthesis step
-itself as a matching problem, nor reports its uncertainty space.
+directly when imputing expenditure into income data [@decoster2020]. A
+recent machine-learning example is SynthPop++ [@neekhra2023] (read in full,
+arXiv v2): IPU [@ye2009] on Indian Census 2011 margins, then a CTGAN
+conditioned on age and sex adds attributes "for which marginals are not
+available" (weight, height, comorbidities) from the IHDS-II survey (pp. 3,
+5). That is the CIA with age–sex as X, made by a neural network and not
+named; the abstract presents it as combining surveys "with different,
+partially overlapping sets of attributes" (p. 1), yet cites no matching or
+data-fusion work, and lists such combination as future work (p. 9). It also
+uses state-level (Maharashtra) microdata for Mumbai because the Mumbai
+subsample is "a few hundred samples, which are not enough" (p. 5): the
+pooled-seed choice, made for the same reason as ours and with the same
+untested homogeneity assumption. Validation compares synthetic to source
+survey distributions (marginals, scatter plots, train-on-synthetic
+regression; pp. 6–7), so as with Guo–Bhat and Ye there is no truth against
+which the borrowed association could be wrong. None of these treats the
+uncontrolled attribute in the seed-based synthesis step itself as a
+matching problem, nor reports its uncertainty space.
 
-**So the bridge paragraph is warranted**: synthesis practice makes the CIA
-silently, inside IPF or maximum entropy, and then validates against margins,
-which (Rässler's level 4) cannot test it.
+**So the bridge paragraph is warranted, with one correction**: synthesis
+practice makes the CIA inside IPF or maximum entropy without connecting it to
+the matching literature or its uncertainty results, and mostly validates
+against margins, which (Rässler's level 4) cannot test it. It is not true that
+the founding paper makes the assumption *silently*: Beckman et al. state it
+(as homogeneity of odds ratios across tracts) and justify it as necessary.
+
+### Beckman et al. as a precedent
+
+What the full text shows, with report page numbers:
+
+- **Seed and margins.** Tract (or block-group) margins from STF-3A; the seed
+  is the multiway table built from the PUMS of the PUMA containing the tract
+  (p. 2, p. 5). IPF estimates "maintain the
+  same odds ratios as those in the sample table in the absence of any
+  marginal information to the contrary", citing Little and Wu (1991) (p. 6).
+  Whole PUMS households are then drawn in proportion to the fitted table,
+  with a 0–1 distance so only exact matches are drawn (pp. 11–12); multiple
+  draws are suggested to carry synthesis uncertainty (p. 12).
+- **The assumption is our pooled-IPF assumption.** Every tract in a PUMA is
+  fitted from the same PUMA seed, so tracts inherit the PUMA's odds ratios.
+  Map tract to origin and PUMA to the pooled seed: for an attribute with no
+  margin (our education), equal odds ratios across groups reduces to
+  E ⊥ O | (A, S), the pooled-IPF row of the table above. Their "statistically
+  correct" variant, a joint (m+1)-way fit with tract as a dimension whose
+  combined odds ratios equal the PUMS (pp. 8–10), keeps the same homogeneity
+  assumption; it "only marginally outperforms" fitting tracts one at a time
+  (p. 16). Neither variant has a separate (tract-own) seed, because no tract
+  microdata exist.
+- **Attributes only in the sample.** Attributes outside the fitted table
+  ride along on the drawn PUMS households. Their validation targets exactly
+  those: household size, which STF-3A has but the fit does not use (p. 13),
+  and the joint of household size and vehicles (pp. 13–15). They also tried
+  imputing household size from the PUMS with CART and found it added
+  variability but no improvement (pp. 15–16).
+- **Planted-truth validation with heterogeneity.** Their second validation
+  treats 22 San Francisco Bay Area PUMAs as pseudo-tracts and a 5% "super
+  PUMS" drawn from all 22 as the seed (pp. 13–14): the same design as ours,
+  with origin in place of tract. The worst errors are the three City of San
+  Francisco PUMAs, known to differ (fewer vehicles), where vehicles for small
+  households are overestimated and single-person no-vehicle households
+  "greatly underestimated"; they were added "to see if a few heterogeneous
+  census tracts in a PUMA would invalidate the procedure" (p. 14). That is
+  our pooled-design bias for thin, dissimilar origins, observed in 1996 on
+  three units. They then argue real tracts are more homogeneous than their
+  pseudo-tracts (p. 14). Our setting is the case where that argument fails:
+  origins are not more homogeneous than the pool, and the thin ones are the
+  ones of interest.
+- **Zero cells.** IPF keeps sample zeros (609 of 11,760 family cells nonzero,
+  p. 15); adding 0.01 to empty cells "badly biases" the margins and is "not
+  recommended" (p. 16). Relevant to our separate-IPF failures and to the
+  hierarchical design, which fills empty cells by borrowing instead of by a
+  constant.
+- **Independence baseline.** Multiplying the margins (full independence) and
+  drawing from the PUMS "badly biases" the margins and the household
+  size × vehicles joint; "not recommended" (pp. 16–17). This is the
+  independence baseline our maximum-entropy designs sit close to.
+
+### What the two follow-ups add (Guo and Bhat 2007; Ye et al. 2009)
+
+- **Zero cells, two answers.** Guo and Bhat treat cells empty in the seed
+  but present in the margins ("incorrect zero cell values", p. 7) by capping
+  IPF iterations, coarsening categories, or reporting where they occur
+  (pp. 7, 9). In Dallas–Fort Worth, 388 of 3,372 block groups failed at
+  household level and 151 at person level, all from small groups absent from
+  the PUMA sample (p. 14). Their validation then **drops** those block groups
+  and evaluates 62 Tarrant County block groups without the problem (p. 16):
+  the same survivor bias we flag for separate IPF. Ye et al. instead
+  **borrow** the zero cells' probabilities from the region-wide PUMS, capped
+  at 1 / (households in the PUMA) because the zero itself is evidence the
+  group is rare locally, and rescale the non-zero cells to sum to one
+  (pp. 11–12). That is pooled borrowing for empty cells only, with an ad hoc
+  cap in place of our κ: the closest precedent for the hierarchical design
+  (which shrinks every cell, not just the empty ones, and estimates the
+  amount by empirical Bayes).
+- **Validation is against the fitted targets, not a truth.** Guo and Bhat
+  score the synthetic population against the IPF-estimated tables (pp.
+  16–19); Ye et al. against the "observed IPF-generated" person table with
+  a χ² test that omits zero cells (pp. 14–16). Neither can see an error in
+  the uncontrolled association, because the reference is itself the CIA
+  point. Beckman et al.'s pseudo-tract design remains the only planted-truth
+  check among the three.
+- **Both misreport Beckman on zero cells.** Ye et al. write that Beckman et
+  al. "recommended adding an arbitrarily small value (e.g., 0.01) to zero
+  cells" (p. 11); Beckman et al. say tweaking "badly biases" the margins and
+  "is not recommended" (Beckman p. 16). Guo and Bhat say Beckman compared
+  tweaking against a maximum-iteration approach (p. 7); Beckman compared it
+  against the untweaked basic algorithm (Beckman pp. 15–16). Cite Beckman
+  directly on this point.
+
+How to use it in the paper: cite Beckman et al. as the origin of the
+assumption we test (same seed odds ratios for every subgroup sharing a seed),
+and as the first planted-truth check of it. Our contribution relative to them
+is to make the subgroup the object of interest, vary its size and its
+distance from the pool, and name the assumption as a CIA so the matching
+results (uncertainty space, bounds) apply.
+
+Not in Beckman, contrary to what one might expect: no discussion of selection
+or non-representative seeds (although they cite Little and Wu, whose title is
+about target and sampled populations differing), and no reference to the
+conditional independence assumption or to matching. Little and Wu (1991) is
+worth reading for the γ (selection) component in its own right
+[@little_wu1991].
 
 ## Positioning the Sprint 4 findings
 
@@ -184,6 +416,22 @@ which (Rässler's level 4) cannot test it.
    E ⊥ A, S | O); κ only moves along the line from the seed to whichever one
    you picked. Picking the wrong CIA cannot be repaired by tuning κ. This is
    the cleanest link to the field and should be stated as such.
+   Singh et al.'s finding (via [@dorazio2006book], pp. 94–95)
+   is the matching-side version: with auxiliary micro-data, use it only for
+   the unidentified (Y, Z) association and let the main files supply the
+   rest. Here X = (A, S), Y = O, Z = E: a thin origin's own records are the
+   auxiliary micro-data, and the finding says to take from them only the
+   origin–education association, not the full (O, A, S, E) joint. That
+   matches what we see: separate IPF (uses the whole origin joint) fails or
+   is noisy; designs that take only a low-dimensional education mix from the
+   origin (separate max entropy, hierarchical shrinking toward the origin's
+   own mix) do best on thin-origin education. It also points to a design we
+   have not run, the RAKEYZ analogue: pooled IPF with one extra margin,
+   origin × education (by age stratum), estimated from the origin's own
+   records. That keeps the pool's age–education association (which separate
+   max entropy zeroes) and the origin's own education level. Caveats: the
+   extra margin carries the thin sample's noise and the γ selection bias,
+   and Singh's setting (survey files, not a selected seed) was not read.
 4. **Separate max entropy removes the bias but keeps no age–education
    association.** This is Rässler's level 3 failure, by construction: it is a
    CIA design, just with origin as the conditioning variable. Its MI of
@@ -203,17 +451,26 @@ which (Rässler's level 4) cannot test it.
 > constraints and auxiliary information [@dorazio2006jos; @conti2012;
 > @fosdick2016]. Population synthesis has used matching to attach survey
 > attributes after the fact [@namazirad2017; @horl2021], but the synthesis
-> methods themselves, and their reviews [@chapuis2022], make the same
-> independence assumption inside the fitting step without naming it, and
-> validate against margins that cannot test it. We make the assumption
-> explicit: each design we compare corresponds to a different conditional
-> independence, and the planted truth lets us measure what each costs.
+> methods themselves make the same independence assumption inside the
+> fitting step. Beckman et al. state it, as subgroups sharing the seed's odds
+> ratios, and justify it as necessary for tractability [@beckman1996]; the
+> reviews describe it as a property of independent sampling
+> [@chapuis2022]; neither connects it to the matching results on what it
+> costs or how to bound it. Later methods kept this structure, adding
+> person-level controls and handling empty seed cells by coarsening,
+> dropping or borrowing regional probabilities [@guo_bhat2007; @ye2009],
+> and validated against the fitted tables rather than a known truth. We make
+> that connection: each design we compare
+> corresponds to a different conditional independence, and the planted truth
+> lets us measure what each costs for subgroups that differ from the pool,
+> the case Beckman et al. observed in three heterogeneous pseudo-tracts and
+> set aside as rare.
 
 ## Verification status of references
 
 | Key | Verified against | Note |
 | --- | --- | --- |
-| dorazio2006book | Booktopia listing (ISBN 9780470023532, 2006, 270 pp.) | Publisher Wiley, Chichester, per the StatMatch documentation |
+| dorazio2006book | Appendices A–D full text (Wiley Online Library, pp. 205–222); Ch. 1 passages pasted by Allison (A/B definition ~pp. 3–4, Sect. 1.4.1 ~pp. 8–9, pages to confirm); Booktopia listing | John Wiley & Sons Ltd 2006, ISBN 0-470-02353-8 (= 978-0-470-02353-2), book DOI 10.1002/0470023554 from the appendix DOIs. Chapters 2–5 not read except passages Allison reported on Singh et al. (1993), incl. pp. 94–95 (confirmed) |
 | dorazio2006jos | Full-text PDF (ISTAT) | JOS 22(1):137–157 |
 | rassler2002book | Springer page | LNS 168, DOI 10.1007/978-1-4613-0053-3 |
 | rassler2004 | Full-text PDF | Austrian J. Stat. 33(1&2):153–171 |
@@ -227,7 +484,12 @@ which (Rässler's level 4) cannot test it.
 | leulescu2013 | Eurostat PDF cover | Methodologies and Working Papers, doi:10.2785/44822 |
 | marella_pfeffermann_nr | Southampton ePrints PDF | Title and authors only; **venue and year not confirmed**, find before citing |
 | chapuis2022 | JASSS page | 25(2):6, DOI 10.18564/jasss.4762 |
+| beckman1996 | Full text of the Los Alamos TRANSIMS/TMIP report version (uploaded scan, 19 pp. + tables/figures); journal citation from RePEc | TR-A 30(6):415–429. Page numbers cited in this note are the **report's**; map to journal pages before quoting. DOI 10.1016/0965-8564(96)00004-3 not confirmed (Crossref blocked here) |
+| guo_bhat2007 | Full text of author manuscript (uploaded); journal citation from Ye et al.'s reference list and repository/index titles | TRR 2014:92–101. Page numbers in this note are the manuscript's. DOI 10.3141/2014-12 not confirmed |
+| ye2009 | Full text of the TRB 88th Annual Meeting paper (uploaded, "submitted for presentation only"); TRID record 881554 | Conference paper, not peer-reviewed journal; Xin Ye (not Peijun Ye). Paper number not confirmed |
+| little_wu1991 | Title from library catalogue; volume and pages from Beckman et al.'s reference list | JASA 86:87–95; Beckman's list says "known marginals", the published title says "known margins"; issue/DOI not confirmed |
 | yameogo2021 | JASSS page | 24(2):5, DOI 10.18564/jasss.4482 |
+| neekhra2023 | Full text, arXiv 2304.12284v2 (16 May 2024; uploaded) | Workshop paper, AI4ABM at ICLR 2023 ("accepted for oral presentation"); not peer-reviewed journal. Cite as workshop/arXiv |
 | namazirad2017 | UOW repository | CEUS 63:3–14; DOI not shown |
 | horl2021 | ETH Research Collection, Wikipedia citation | TR-C 130:103291, DOI 10.1016/j.trc.2021.103291 |
 | decoster2020 | IJM page | IJM 13(3):70–94, DOI 10.34196/ijm.00226 |
@@ -238,5 +500,6 @@ the NRC list gives the Treasury title "Statistical problems of merged data
 files", and the 2001 JOS reprint was not confirmed), Moriarity and Scheuren
 (2001), Okner (1972, NRC list gives *Annals of Economic and Social
 Measurement* 1:325–362), Manski's partial-identification work, and Singh et
-al. (1993). Wu et al. (2018) still carries its "[verify author list]" flag in
+al. (1993) itself (cited only through the book). Filippello et al. (2004)
+likewise only through the book. Wu et al. (2018) still carries its "[verify author list]" flag in
 `docs/maxent_design.md`; the ACM page did not load here.
