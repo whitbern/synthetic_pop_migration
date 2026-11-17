@@ -11,6 +11,8 @@ committed (see `.gitignore`).
 
 ```
 src/synthpop/ipf.py        iterative proportional fitting on N-way tables
+src/synthpop/ipu.py        iterative proportional updating (household + person controls), reference solver
+src/synthpop/ipu_convergence.py  IPU convergence verification vs Ye et al. (2022)
 src/synthpop/maxent.py     maximum-entropy tables under linear (margin) constraints
 src/synthpop/design_maxent.py  the max-entropy design on the Sprint 2 inputs
 src/synthpop/design_ipf.py     pooled and separate IPF on the Sprint 2 inputs
@@ -62,6 +64,16 @@ zeros (`InconsistentMarginsError`). If fitting still stalls it raises
 | 4 | Inconsistent margins fail loudly | `test_different_totals_fail`, `test_overlapping_margins_that_disagree_fail`, `test_infeasible_zero_pattern_fails_instead_of_returning_garbage` |
 | 5 | Idempotence | `test_refitting_a_fitted_table_changes_nothing`, `test_seed_that_already_fits_is_returned_unchanged` |
 | 6 | A planted three-way table is recovered | `test_planted_three_way_table_is_recovered` (plus a uniform-seed negative control) |
+
+## IPU convergence verification
+
+`synthpop.ipu` implements iterative proportional updating (Ye et al. 2009)
+with its goodness-of-fit δ logged every iteration, plus a minimum-KL
+reference solver that certifies when an exact solution exists.
+`python -m synthpop.ipu_convergence` runs it on planted two-level instances
+to test Ye et al. (2022)'s non-convergence result. Tests are in
+`tests/test_ipu.py`; the write-up is in
+[docs/ipu_convergence.md](docs/ipu_convergence.md).
 
 ## Sprint 2: ground truth and the selection mechanism
 
