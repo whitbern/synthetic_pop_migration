@@ -8,6 +8,14 @@ from synthpop.ipf import (
     ipf,
     marginal,
 )
+from synthpop.ipu import (
+    InfeasibleConstraintError,
+    IPUConvergenceError,
+    IPUResult,
+    entropy_weights,
+    goodness_of_fit,
+    ipu,
+)
 from synthpop.maxent import (
     Constraint,
     MaxEntConvergenceError,
@@ -36,6 +44,12 @@ __all__ = [
     "check_consistency",
     "ipf",
     "marginal",
+    "InfeasibleConstraintError",
+    "IPUConvergenceError",
+    "IPUResult",
+    "entropy_weights",
+    "goodness_of_fit",
+    "ipu",
     "Constraint",
     "MaxEntConvergenceError",
     "MaxEntResult",
